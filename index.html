@@ -1590,10 +1590,7 @@ let historyVisible = false;
 // customLimits[sheetIdx][metricKey] = {lo, hi}
 // history[sheetIdx][metricKey] = [{time, editor, reason, oldLo, oldHi, newLo, newHi}]
 
-// ── Pre-loaded limits from PPT (2026/05/05 version) ──────────────────────
-const INIT_TIME = '2026/05/05 00:00';
-const INIT_EDITOR = 'Yvonne/2847';
-const INIT_REASON = 'Quinty RD';
+// ── Pre-loaded limits from PPT ────────────────────────────────────────────
 // Sheet index mapping: 0=solution, 1=WBR5280, 2=WBR5200
 const PPT_DEFAULTS = {
   // Gel Solution (Slide 2 of PPT)
@@ -1635,7 +1632,7 @@ for(const [si, metrics] of Object.entries(PPT_DEFAULTS)){
   customLimits[idx] = {}; history[idx] = {};
   for(const [mkey, lim] of Object.entries(metrics)){
     customLimits[idx][mkey] = {lo:lim.lo, hi:lim.hi};
-    history[idx][mkey] = [{time:INIT_TIME, editor:INIT_EDITOR, reason:INIT_REASON, oldLo:null, oldHi:null, newLo:lim.lo, newHi:lim.hi}];
+    history[idx][mkey] = [];
   }
 }
 
