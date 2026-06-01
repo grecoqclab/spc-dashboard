@@ -2419,6 +2419,7 @@ function toggleRule(sheetIdx, metricKey, ruleId) {
   const s = getRuleKey(sheetIdx, metricKey);
   if(s.has(ruleId)) s.delete(ruleId); else s.add(ruleId);
   renderRulesPage();
+  lsSave();
 }
 
 function onRuleSheetChange() {
@@ -2471,6 +2472,7 @@ ${action==='enable'?'套用目前啟用':'套用目前停用'}的規則設定嗎
     }
   });
   renderRulesPage();
+  lsSave();
 }
 
 function quickSet(preset) {
@@ -2500,6 +2502,7 @@ function quickSet(preset) {
     newSet.forEach(id => s.add(id));
   });
   renderRulesPage();
+  lsSave();
 }
 
 function buildRuleMetricOptions(sheetIdx) {
@@ -3034,6 +3037,15 @@ function lsSave() {
       }
     }
 
+    // Serialize enabledRules (Set → Array)
+    const savedRules = {};
+    Object.keys(enabledRules).forEach(si => {
+      savedRules[si] = {};
+      Object.keys(enabledRules[si]).forEach(mk => {
+        savedRules[si][mk] = [...enabledRules[si][mk]];
+      });
+    });
+
     const state = {
       gsSheetId:   document.getElementById('gsSheetId').value || '',
       gsSheetName: document.getElementById('gsSheetName').value || '',
@@ -3042,6 +3054,7 @@ function lsSave() {
             : document.getElementById('dataSourceBadge').className.includes('excel') ? 'excel' : 'builtin',
       customLimits: typeof customLimits !== 'undefined' ? customLimits : {},
       customHistory: typeof customHistory !== 'undefined' ? customHistory : {},
+      enabledRules: savedRules,
     };
     localStorage.setItem(LS_KEY, JSON.stringify(state));
   } catch(e) { /* quota exceeded or private mode — silently ignore */ }
@@ -3068,6 +3081,16 @@ function lsRestore() {
     }
     if(state.customHistory && typeof customHistory !== 'undefined') {
       Object.assign(customHistory, state.customHistory);
+    }
+
+    // Restore enabledRules (Array u2192 Set)
+    if(state.enabledRules) {
+      Object.keys(state.enabledRules).forEach(si => {
+        if(!enabledRules[si]) enabledRules[si] = {};
+        Object.keys(state.enabledRules[si]).forEach(mk => {
+          enabledRules[si][mk] = new Set(state.enabledRules[si][mk]);
+        });
+      });
     }
 
     // Show restore notice if there was imported data
