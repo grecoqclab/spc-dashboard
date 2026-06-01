@@ -370,7 +370,7 @@ body{font-family:var(--font-sans)}
       </div>
       <div style="font-size:11px;color:#0369A1;background:#E0F2FE;padding:10px 14px;border-radius:6px;border:1px solid #BAE6FD;line-height:1.8">
         <b>📋 設定步驟（一次性）：</b><br>
-        1. 在 Google Sheets 中建立一份新試算表，新增兩個工作表，分別命名：<code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_limits</code> 和 <code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_history</code><br>
+        1. 在 Google Sheets 中建立一份新試算表，新增以下工作表：<code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_limits</code>、<code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_history</code>、<code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_rules</code>、<code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_rules_history</code>、<code style="background:#fff;padding:1px 4px;border-radius:3px">_cl_records</code>（後三個可由 Apps Script 自動建立）<br>
         2. <code>_cl_limits</code> 第一列填入標題：<code style="background:#fff;padding:1px 4px;border-radius:3px">sheetIdx,metricKey,lo,hi,updatedAt,updatedBy</code><br>
         3. <code>_cl_history</code> 第一列填入標題：<code style="background:#fff;padding:1px 4px;border-radius:3px">time,sheetIdx,metricKey,editor,reason,oldLo,oldHi,newLo,newHi</code><br>
         4. 點試算表右上角「共用」→「知道連結的人」→「檢視者」（讀取用）<br>
@@ -379,49 +379,102 @@ body{font-family:var(--font-sans)}
         <details>
           <summary style="cursor:pointer;font-weight:600;color:#0284C7">📋 點此展開 Apps Script 程式碼（複製貼上至 Apps Script）</summary>
           <pre id="gasCodePre" style="margin-top:8px;background:#1E293B;color:#E2E8F0;padding:12px;border-radius:6px;font-size:10.5px;overflow-x:auto;white-space:pre;line-height:1.6">// ═══════════════════════════════════════════════════════
-// SPC Dashboard — Google Apps Script 後端
+// SPC Dashboard — Google Apps Script 後端 v2
 // 部署為「網路應用程式」，執行身分：我、存取：所有人
 // ═══════════════════════════════════════════════════════
 const SHEET_ID = 'YOUR_SPREADSHEET_ID_HERE'; // 替換成你的試算表 ID
 
+// ── 讀取資料（解決 CORS 問題）────────────────────────────
+function doGet(e) {
+  const action = e.parameter.action;
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+
+  if (action === 'getLimits') {
+    const sh = ss.getSheetByName('_cl_limits');
+    return json(sh ? sh.getDataRange().getValues() : []);
+  }
+  if (action === 'getRules') {
+    const sh = ss.getSheetByName('_cl_rules');
+    return json(sh ? sh.getDataRange().getValues() : []);
+  }
+  if (action === 'getRulesHistory') {
+    const sh = ss.getSheetByName('_cl_rules_history');
+    return json(sh ? sh.getDataRange().getValues() : []);
+  }
+  if (action === 'getRecords') {
+    const sh = ss.getSheetByName('_cl_records');
+    return json(sh ? sh.getDataRange().getValues() : []);
+  }
+  return ContentService.createTextOutput('SPC DB ready').setMimeType(ContentService.MimeType.TEXT);
+}
+
+// ── 寫入資料 ──────────────────────────────────────────────
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   const ss = SpreadsheetApp.openById(SHEET_ID);
 
   if (data.action === 'saveLimit') {
     const { sheetIdx, metricKey, lo, hi, time, editor, reason, oldLo, oldHi } = data;
-
-    // ── 更新 _cl_limits（upsert：找到就更新，找不到就新增）
-    const limSheet = ss.getSheetByName('_cl_limits');
-    const limData  = limSheet.getDataRange().getValues();
-    let found = false;
-    for (let i = 1; i < limData.length; i++) {
-      if (String(limData[i][0]) === String(sheetIdx) && limData[i][1] === metricKey) {
-        limSheet.getRange(i + 1, 3, 1, 4).setValues([[lo, hi, time, editor]]);
-        found = true; break;
-      }
-    }
-    if (!found) {
-      limSheet.appendRow([sheetIdx, metricKey, lo, hi, time, editor]);
-    }
-
-    // ── 附加至 _cl_history
-    const histSheet = ss.getSheetByName('_cl_history');
-    histSheet.appendRow([time, sheetIdx, metricKey, editor, reason, oldLo, oldHi, lo, hi]);
-
-    return ContentService.createTextOutput(
-      JSON.stringify({ status: 'ok' })
-    ).setMimeType(ContentService.MimeType.JSON);
+    upsert(ss, '_cl_limits',
+      r => String(r[0]) === String(sheetIdx) && r[1] === metricKey,
+      [sheetIdx, metricKey, lo, hi, time, editor]
+    );
+    ss.getSheetByName('_cl_history').appendRow(
+      [time, sheetIdx, metricKey, editor, reason, oldLo, oldHi, lo, hi]
+    );
+    return json({ status: 'ok' });
   }
 
-  return ContentService.createTextOutput(
-    JSON.stringify({ status: 'error', message: 'Unknown action' })
-  ).setMimeType(ContentService.MimeType.JSON);
+  if (data.action === 'saveRules') {
+    const { sheetIdx, metricKey, rules, time, editor, reason, oldRules } = data;
+    ensureSheet(ss, '_cl_rules',
+      ['sheetIdx','metricKey','rules','updatedAt','updatedBy']);
+    ensureSheet(ss, '_cl_rules_history',
+      ['time','sheetIdx','metricKey','editor','reason','oldRules','newRules']);
+    upsert(ss, '_cl_rules',
+      r => String(r[0]) === String(sheetIdx) && r[1] === metricKey,
+      [sheetIdx, metricKey, JSON.stringify(rules), time, editor]
+    );
+    ss.getSheetByName('_cl_rules_history').appendRow(
+      [time, sheetIdx, metricKey, editor, reason,
+       JSON.stringify(oldRules), JSON.stringify(rules)]
+    );
+    return json({ status: 'ok' });
+  }
+
+  if (data.action === 'saveRecord') {
+    const { sheetIdx, metricKey, type, value, batch, time } = data;
+    ensureSheet(ss, '_cl_records',
+      ['time','sheetIdx','metricKey','type','value','batch']);
+    ss.getSheetByName('_cl_records').appendRow(
+      [time, sheetIdx, metricKey, type, value, batch]
+    );
+    return json({ status: 'ok' });
+  }
+
+  return json({ status: 'error', message: 'Unknown action' });
 }
 
-// 允許 CORS（讓瀏覽器可以呼叫）
-function doGet(e) {
-  return ContentService.createTextOutput('SPC DB ready').setMimeType(ContentService.MimeType.TEXT);
+// ── 工具函式 ──────────────────────────────────────────────
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+function upsert(ss, sheetName, matchFn, newRow) {
+  const sh = ss.getSheetByName(sheetName);
+  const data = sh.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (matchFn(data[i])) {
+      sh.getRange(i + 1, 1, 1, newRow.length).setValues([newRow]);
+      return;
+    }
+  }
+  sh.appendRow(newRow);
+}
+function ensureSheet(ss, name, headers) {
+  if (!ss.getSheetByName(name)) {
+    ss.insertSheet(name).appendRow(headers);
+  }
 }</pre>
         </details>
       </div>
@@ -1539,6 +1592,14 @@ function loadNewData(newRaw, source) {
   buildRuleMetricOptions(0);
   buildWeeklyMetricOptions();
   update();
+  // 歷史新高 / 新低偵測（每次匯入後，檢查所有 sheet × metric）
+  if(gsDbConnected && GS_SCRIPT_URL) {
+    setTimeout(() => {
+      SHEETS.forEach((_, si) => {
+        METRICS.forEach(m => { try { checkAndPostRecords(si, m.key); } catch(e){} });
+      });
+    }, 500);
+  }
 }
 
 function rebuildSheetSelectors() {
@@ -1729,6 +1790,7 @@ async function gsDbLoad() {
 
     gsDbConnected = true;
     setGsDbStatus('ok', `✅ 已連接 Google Sheets 資料庫（載入 ${loadedCount} 筆界限）`);
+    await gsDbLoadRules();
     update();
     return true;
   } catch(err) {
@@ -1774,6 +1836,61 @@ async function gsDbWrite({sheetIdx, metricKey, entry}) {
     setGsDbStatus('err', `❌ 寫入失敗：${err.message}　已備份至本機`);
     persistLimitsLocal();
   }
+}
+
+// ── GS 讀取：管制規則（_cl_rules）────────────────────────────────────────
+async function gsDbLoadRules() {
+  if(!GS_DB_SHEET_ID || !GS_SCRIPT_URL) return;
+  try {
+    const url = `${GS_SCRIPT_URL}?action=getRules`;
+    const resp = await fetch(url);
+    if(!resp.ok) return;
+    const rows = await resp.json();
+    for(const row of rows.slice(1)) {
+      const [si, mkey, rulesJson] = row;
+      if(!si || !mkey || !rulesJson) continue;
+      const idx = parseInt(si);
+      let ruleArr;
+      try { ruleArr = JSON.parse(rulesJson); } catch(e2) { continue; }
+      const s = getRuleKey(idx, mkey);
+      s.clear();
+      if(Array.isArray(ruleArr)) ruleArr.forEach(id => s.add(id));
+      else if(typeof ruleArr === 'object') Object.keys(ruleArr).filter(k=>ruleArr[k]).forEach(id=>s.add(id));
+    }
+  } catch(e) { console.warn('[GS-DB] loadRules error', e); }
+}
+
+// ── GS 寫入：管制規則 ─────────────────────────────────────────────────────
+async function gsDbWriteRules(sheetIdx, metricKey, oldSet) {
+  if(!GS_SCRIPT_URL) return;
+  const newSet = getRuleKey(sheetIdx, metricKey);
+  const rules    = Object.fromEntries(SPC_RULES.map(r=>[r.id, newSet.has(r.id)]));
+  const oldRules = Object.fromEntries(SPC_RULES.map(r=>[r.id, oldSet.has(r.id)]));
+  const time = new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const payload = {action:'saveRules',sheetIdx:String(sheetIdx),metricKey,rules,oldRules,time,editor:'系統',reason:'規則切換'};
+  try {
+    await fetch(GS_SCRIPT_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  } catch(e) { console.warn('[GS-DB] writeRules error', e); }
+}
+
+// ── 歷史新高 / 新低偵測 ─────────────────────────────────────────────────
+async function checkAndPostRecords(sheetIdx, metricKey) {
+  if(!GS_SCRIPT_URL || !gsDbConnected) return;
+  const series = getSeriesData(sheetIdx, metricKey);
+  if(series.length < 2) return;
+  const values = series.map(r=>r.value);
+  const current = values[values.length-1];
+  const historical = values.slice(0,-1);
+  const time = new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const batch = series[series.length-1].batch;
+  const postRecord = async (type) => {
+    try {
+      await fetch(GS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'saveRecord',sheetIdx:String(sheetIdx),metricKey,type,value:current,batch,time})});
+    } catch(e) { console.warn('[GS-DB] postRecord error', e); }
+  };
+  if(current > Math.max(...historical)) await postRecord('ALL_TIME_HIGH');
+  if(current < Math.min(...historical)) await postRecord('ALL_TIME_LOW');
 }
 
 // ── 簡易 CSV 解析（處理帶引號的欄位）────────────────────────────────────
@@ -2384,8 +2501,10 @@ function getRuleKey(sheetIdx, metricKey) {
 
 function toggleRule(sheetIdx, metricKey, ruleId) {
   const s = getRuleKey(sheetIdx, metricKey);
+  const oldSet = new Set(s);
   if(s.has(ruleId)) s.delete(ruleId); else s.add(ruleId);
   renderRulesPage();
+  if(gsDbConnected && GS_SCRIPT_URL) gsDbWriteRules(sheetIdx, metricKey, oldSet);
 }
 
 function onRuleSheetChange() {
@@ -2426,6 +2545,7 @@ ${action==='enable'?'套用目前啟用':'套用目前停用'}的規則設定嗎
 
   targets.forEach(({si, mk}) => {
     const s = getRuleKey(si, mk);
+    const oldSet = new Set(s);
     if(action === 'enable') {
       // Copy current enabled set to target
       s.clear();
@@ -2436,6 +2556,7 @@ ${action==='enable'?'套用目前啟用':'套用目前停用'}的規則設定嗎
       const disabledNow = [...allIds].filter(id=>!currentSet.has(id));
       disabledNow.forEach(id => s.delete(id));
     }
+    if(gsDbConnected && GS_SCRIPT_URL) gsDbWriteRules(si, mk, oldSet);
   });
   renderRulesPage();
 }
@@ -2463,8 +2584,10 @@ function quickSet(preset) {
 
   targets.forEach(({si, mk}) => {
     const s = getRuleKey(si, mk);
+    const oldSet = new Set(s);
     s.clear();
     newSet.forEach(id => s.add(id));
+    if(gsDbConnected && GS_SCRIPT_URL) gsDbWriteRules(si, mk, oldSet);
   });
   renderRulesPage();
 }
