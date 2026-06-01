@@ -2429,16 +2429,17 @@ function onRuleSheetChange() {
 
 // Get the scope of targets for batch apply
 function getBatchTargets(scope, sheetIdx, metricKey) {
-  const targets = []; // [{sheetIdx, metricKey}]
+  const targets = []; // [{si, mk}]
+  const allSi = SHEETS.map((_, i) => i); // use actual SHEETS length
   if(scope === 'metric') {
     // All sheets, same metric
-    [0,1,2].forEach(si => targets.push({si, mk:metricKey}));
+    allSi.forEach(si => targets.push({si, mk:metricKey}));
   } else if(scope === 'sheet') {
     // All metrics, same sheet
     METRICS.forEach(m => targets.push({si:sheetIdx, mk:m.key}));
   } else {
     // All sheets × all metrics
-    [0,1,2].forEach(si => METRICS.forEach(m => targets.push({si, mk:m.key})));
+    allSi.forEach(si => METRICS.forEach(m => targets.push({si, mk:m.key})));
   }
   return targets;
 }
@@ -2458,17 +2459,20 @@ function batchApply(action) {
   if(!confirm(`確定要將「${scopeLabel}」共 ${count} 個組合，
 ${action==='enable'?'套用目前啟用':'套用目前停用'}的規則設定嗎？`)) return;
 
+  // Snapshot currentSet BEFORE looping (it may be mutated when si/mk matches source)
+  const enableSnapshot = new Set(currentSet);
+  const allIds = new Set(SPC_RULES.map(r=>r.id));
+  const disabledSnapshot = [...allIds].filter(id=>!enableSnapshot.has(id));
+
   targets.forEach(({si, mk}) => {
     const s = getRuleKey(si, mk);
     if(action === 'enable') {
       // Copy current enabled set to target
       s.clear();
-      currentSet.forEach(r => s.add(r));
+      enableSnapshot.forEach(r => s.add(r));
     } else {
-      // Remove currently-disabled rules from target (keep only enabled)
-      const allIds = new Set(SPC_RULES.map(r=>r.id));
-      const disabledNow = [...allIds].filter(id=>!currentSet.has(id));
-      disabledNow.forEach(id => s.delete(id));
+      // Remove currently-disabled rules from all targets
+      disabledSnapshot.forEach(id => s.delete(id));
     }
   });
   renderRulesPage();
