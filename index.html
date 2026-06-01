@@ -2384,27 +2384,23 @@ const SPC_RULES = [
   {
     id: 'R9',
     name: '規則 9：歷史新高',
-    desc: '當前量測值超過此前所有歷史資料的最大值。製程異常偏高訊號。',
+    desc: '所有資料中的最高點（唯一一點）。製程異常偏高訊號。',
     check: (vals, mean, sigma) => {
-      const r=[];
-      for(let i=1;i<vals.length;i++){
-        if(vals[i] > Math.max(...vals.slice(0,i)))
-          r.push({i, detail:`歷史新高 ${vals[i].toFixed(3)}`});
-      }
-      return r;
+      if(vals.length === 0) return [];
+      const maxVal = Math.max(...vals);
+      const maxIdx = vals.lastIndexOf(maxVal);
+      return [{i: maxIdx, detail:`歷史新高 ${maxVal.toFixed(3)}`}];
     }
   },
   {
     id: 'R10',
     name: '規則 10：歷史新低',
-    desc: '當前量測值低於此前所有歷史資料的最小值。製程異常偏低訊號。',
+    desc: '所有資料中的最低點（唯一一點）。製程異常偏低訊號。',
     check: (vals, mean, sigma) => {
-      const r=[];
-      for(let i=1;i<vals.length;i++){
-        if(vals[i] < Math.min(...vals.slice(0,i)))
-          r.push({i, detail:`歷史新低 ${vals[i].toFixed(3)}`});
-      }
-      return r;
+      if(vals.length === 0) return [];
+      const minVal = Math.min(...vals);
+      const minIdx = vals.lastIndexOf(minVal);
+      return [{i: minIdx, detail:`歷史新低 ${minVal.toFixed(3)}`}];
     }
   },
 ];
