@@ -1565,23 +1565,23 @@ function rebuildSheetSelectors() {
 
 
 const METRICS = [
-  {key:'TTC', label:'TTC', extract: r=>[r.TTC]},
-  {key:'SST10', label:'SST10 (厚度)', extract: r=>[r.SST10]},
+  {key:'TTC', label:'TTC', extract: r=>[r['TTC time (sec)'] ?? r.TTC]},
+  {key:'SST10', label:'SST10 (厚度)', extract: r=>[r.SST10 ?? r.Thickness]},
   {key:'SST14', label:'SST14 (厚度)', extract: r=>[r.SST14]},
-  {key:'Via_11_SST10', label:'Via (1:1) SST10', extract: r=>[r.Via_11_SST10_1, r.Via_11_SST10_2]},
-  {key:'Via_11_SST14', label:'Via (1:1) SST14', extract: r=>[r.Via_11_SST14_1, r.Via_11_SST14_2]},
-  {key:'Via_21_SST10', label:'Via (2:1) SST10', extract: r=>[r.Via_21_SST10_1, r.Via_21_SST10_2]},
-  {key:'Via_21_SST14', label:'Via (2:1) SST14', extract: r=>[r.Via_21_SST14_1, r.Via_21_SST14_2]},
-  {key:'Via_31_SST10', label:'Via (3:1) SST10', extract: r=>[r.Via_31_SST10_1, r.Via_31_SST10_2]},
-  {key:'Via_31_SST14', label:'Via (3:1) SST14', extract: r=>[r.Via_31_SST14_1, r.Via_31_SST14_2]},
+  {key:'Via_11_SST10', label:'Via (1:1) SST10', extract: r=>[r['Via (1:1)\nSST10 (1)'] ?? r.Via_11_SST10_1, r['Via (1:1)\nSST10 (2)'] ?? r.Via_11_SST10_2]},
+  {key:'Via_11_SST14', label:'Via (1:1) SST14', extract: r=>[r['Via (1:1)\nSST14 (1)'] ?? r.Via_11_SST14_1, r['Via (1:1)\nSST14 (2)'] ?? r.Via_11_SST14_2]},
+  {key:'Via_21_SST10', label:'Via (2:1) SST10', extract: r=>[r['Via (2:1)\nSST10 (1)'] ?? r.Via_21_SST10_1, r['Via (2:1)\nSST10 (2)'] ?? r.Via_21_SST10_2]},
+  {key:'Via_21_SST14', label:'Via (2:1) SST14', extract: r=>[r['Via (2:1)\nSST14 (1)'] ?? r.Via_21_SST14_1, r['Via (2:1)\nSST14 (2)'] ?? r.Via_21_SST14_2]},
+  {key:'Via_31_SST10', label:'Via (3:1) SST10', extract: r=>[r['Via (3:1)\nSST10 (1)'] ?? r.Via_31_SST10_1, r['Via (3:1)\nSST10 (2)'] ?? r.Via_31_SST10_2]},
+  {key:'Via_31_SST14', label:'Via (3:1) SST14', extract: r=>[r['Via (3:1)\nSST14 (1)'] ?? r.Via_31_SST14_1, r['Via (3:1)\nSST14 (2)'] ?? r.Via_31_SST14_2]},
   {key:'Adhesion_SST10', label:'Adhesion SST10', extract: r=>[r.Adhesion_SST10]},
   {key:'Adhesion_SST14', label:'Adhesion SST14', extract: r=>[r.Adhesion_SST14]},
   {key:'Resolution_SST10', label:'Resolution SST10', extract: r=>[r.Resolution_SST10]},
   {key:'Resolution_SST14', label:'Resolution SST14', extract: r=>[r.Resolution_SST14]},
   {key:'Strip_SST10', label:'Strip SST10', extract: r=>[r.Strip_SST10]},
   {key:'Strip_SST14', label:'Strip SST14', extract: r=>[r.Strip_SST14]},
-  {key:'Dia_11_SST10', label:'Diameter (1:1) SST10', extract: r=>[r.Dia_11_SST10_1, r.Dia_11_SST10_2]},
-  {key:'Dia_11_SST14', label:'Diameter (1:1) SST14', extract: r=>[r.Dia_11_SST14_1, r.Dia_11_SST14_2]},
+  {key:'Dia_11_SST10', label:'Diameter (1:1) SST10', extract: r=>[r['Via (1:1)\nSST10 - Diameter (1)'] ?? r.Dia_11_SST10_1, r['Via (1:1)\nSST10 - Diameter (2)'] ?? r.Dia_11_SST10_2]},
+  {key:'Dia_11_SST14', label:'Diameter (1:1) SST14', extract: r=>[r['Via (1:1)\nSST14 - Diameter (1)'] ?? r.Dia_11_SST14_1, r['Via (1:1)\nSST14 - Diameter (2)'] ?? r.Dia_11_SST14_2]},
 ];
 
 const d2 = 1.128;
