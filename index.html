@@ -249,7 +249,179 @@ body{font-family:var(--font-sans)}
 @keyframes autosync-pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .autosync-newbadge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;opacity:0;transition:opacity .4s}
 .autosync-newbadge.show{opacity:1}
+
+/* ══════════════════════════════════════════════
+   OCAP — Alert Banner
+══════════════════════════════════════════════ */
+#ocapAlertBanner{display:none;position:sticky;top:0;z-index:200;background:#FEF2F2;border-bottom:2px solid #FCA5A5;padding:10px 20px;margin:0 -1rem 1rem;animation:ocap-slide-in .3s ease}
+#ocapAlertBanner.show{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+@keyframes ocap-slide-in{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.ocap-alert-icon{font-size:20px;flex-shrink:0}
+.ocap-alert-text{flex:1;font-size:13px;color:#991B1B;font-weight:500;line-height:1.5}
+.ocap-alert-text strong{font-size:14px;display:block;margin-bottom:2px}
+.ocap-alert-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.ocap-viol-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ocap-viol-chip:hover{background:#FEE2E2;box-shadow:0 2px 6px rgba(185,28,28,.25);transform:translateY(-1px)}
+.ocap-alert-close{height:28px;padding:0 12px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid #FCA5A5;background:#fff;color:#B91C1C;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.ocap-alert-close:hover{background:#FEE2E2}
+.ocap-email-btn{height:28px;padding:0 12px;font-size:12px;font-weight:600;border-radius:6px;border:none;background:#DC2626;color:#fff;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:background .15s}
+.ocap-email-btn:hover{background:#B91C1C}
+
+/* ══════════════════════════════════════════════
+   OCAP — Modal
+══════════════════════════════════════════════ */
+#ocapModalOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:500;align-items:center;justify-content:center;padding:16px}
+#ocapModalOverlay.show{display:flex}
+#ocapModal{background:#fff;border-radius:12px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(15,23,42,.25);display:flex;flex-direction:column}
+.ocap-modal-header{padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:flex-start;gap:12px}
+.ocap-modal-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+.ocap-modal-title-block{flex:1}
+.ocap-modal-title{font-size:16px;font-weight:700;color:#1E293B;margin-bottom:2px}
+.ocap-modal-sub{font-size:12px;color:#64748B}
+.ocap-modal-close{background:none;border:none;font-size:20px;color:#94A3B8;cursor:pointer;padding:4px;border-radius:4px;line-height:1;flex-shrink:0}
+.ocap-modal-close:hover{color:#475569;background:#F1F5F9}
+.ocap-modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:18px}
+.ocap-field-group{display:flex;flex-direction:column;gap:6px}
+.ocap-field-label{font-size:12px;font-weight:600;color:#475569;letter-spacing:.03em}
+.ocap-field-label .req{color:#DC2626}
+.ocap-input{width:100%;padding:8px 12px;font-size:13px;border-radius:6px;border:1px solid #CBD5E1;background:#fff;color:#1E293B;resize:vertical;font-family:inherit;transition:border-color .15s,box-shadow .15s}
+.ocap-input:focus{outline:none;border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.ocap-input[readonly]{background:#F8FAFC;color:#64748B;cursor:default}
+.ocap-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Checklist */
+.ocap-checklist{display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px}
+.ocap-checklist-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ocap-check-item{display:flex;align-items:flex-start;gap:10px;font-size:12px;color:#334155;cursor:pointer;padding:5px 6px;border-radius:5px;transition:background .12s}
+.ocap-check-item:hover{background:#F1F5F9}
+.ocap-check-item input[type=checkbox]{width:16px;height:16px;cursor:pointer;flex-shrink:0;margin-top:1px;accent-color:#2563EB}
+.ocap-check-item.done{color:#64748B}
+.ocap-check-item.done span{text-decoration:line-through}
+.ocap-progress{display:flex;align-items:center;gap:10px;margin-top:8px}
+.ocap-progress-bar{flex:1;height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden}
+.ocap-progress-fill{height:100%;background:#2563EB;border-radius:3px;transition:width .3s ease}
+.ocap-progress-label{font-size:11px;color:#64748B;white-space:nowrap}
+/* Footer */
+.ocap-modal-footer{padding:16px 24px;border-top:1px solid #E2E8F0;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;background:#F8FAFC;border-radius:0 0 12px 12px}
+.ocap-cancel-btn{height:36px;padding:0 18px;font-size:13px;font-weight:600;border-radius:6px;border:1px solid #CBD5E1;background:#fff;color:#475569;cursor:pointer;transition:all .15s}
+.ocap-cancel-btn:hover{background:#F1F5F9}
+.ocap-submit-btn{height:36px;padding:0 22px;font-size:13px;font-weight:700;border-radius:6px;border:none;background:#2563EB;color:#fff;cursor:pointer;transition:background .15s}
+.ocap-submit-btn:hover{background:#1D4ED8}
+.ocap-submit-btn:disabled{background:#94A3B8;cursor:not-allowed}
+/* Status message */
+.ocap-status{font-size:12px;padding:8px 12px;border-radius:6px;display:none;margin-bottom:4px}
+.ocap-status.ok{display:block;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7}
+.ocap-status.err{display:block;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5}
+.ocap-status.loading{display:block;background:#EFF6FF;color:#1D4ED8;border:1px solid #93C5FD}
+/* OCAP Settings Panel */
+.ocap-settings-panel{background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;padding:14px 16px;margin-bottom:1rem}
+.ocap-settings-title{font-size:13px;font-weight:600;color:#9A3412;margin-bottom:10px;display:flex;align-items:center;gap:6px;justify-content:space-between}
+.ocap-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ocap-settings-field{display:flex;flex-direction:column;gap:4px}
+.ocap-settings-field label{font-size:11px;color:#7C2D12;font-weight:500}
+.ocap-settings-field input{height:34px;padding:0 10px;font-size:12px;border-radius:6px;border:1px solid #FED7AA;background:#fff;color:#1E293B;width:100%}
+.ocap-settings-field input:focus{outline:none;border-color:#EA580C;box-shadow:0 0 0 2px rgba(234,88,12,.15)}
+.ocap-settings-save{height:32px;padding:0 14px;font-size:12px;font-weight:600;border-radius:6px;border:none;background:#EA580C;color:#fff;cursor:pointer;margin-top:8px;transition:background .15s}
+.ocap-settings-save:hover{background:#C2410C}
 </style>
+
+<!-- ═══════════════════════════════════════════════════════
+     OCAP Alert Banner (sticky, shown when OOC/OOB detected)
+═══════════════════════════════════════════════════════ -->
+<div id="ocapAlertBanner">
+  <span class="ocap-alert-icon">🚨</span>
+  <div class="ocap-alert-text">
+    <strong>偵測到管制違規！</strong>
+    <div class="ocap-alert-list" id="ocapAlertList"></div>
+  </div>
+  <button class="ocap-email-btn" id="ocapEmailBtn" onclick="sendOcapEmail()">📧 Email 通知</button>
+  <button class="ocap-alert-close" onclick="dismissOcapBanner()">✕ 關閉</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     OCAP Modal
+═══════════════════════════════════════════════════════ -->
+<div id="ocapModalOverlay" onclick="if(event.target===this)closeOcapModal()">
+  <div id="ocapModal">
+    <div class="ocap-modal-header">
+      <span class="ocap-modal-icon">📋</span>
+      <div class="ocap-modal-title-block">
+        <div class="ocap-modal-title">OCAP 異常矯正行動計畫</div>
+        <div class="ocap-modal-sub" id="ocapModalSub">WBR Film Fine 10 / FQC — 管制圖違規</div>
+      </div>
+      <button class="ocap-modal-close" onclick="closeOcapModal()">×</button>
+    </div>
+    <div class="ocap-modal-body">
+      <!-- 違規資訊（唯讀） -->
+      <div class="ocap-row-2">
+        <div class="ocap-field-group">
+          <label class="ocap-field-label">違規批次</label>
+          <input class="ocap-input" id="ocapBatch" readonly placeholder="—">
+        </div>
+        <div class="ocap-field-group">
+          <label class="ocap-field-label">違規規則</label>
+          <input class="ocap-input" id="ocapRule" readonly placeholder="—">
+        </div>
+      </div>
+      <div class="ocap-row-2">
+        <div class="ocap-field-group">
+          <label class="ocap-field-label">產品 / 項目</label>
+          <input class="ocap-input" id="ocapProduct" readonly placeholder="—">
+        </div>
+        <div class="ocap-field-group">
+          <label class="ocap-field-label">偵測時間</label>
+          <input class="ocap-input" id="ocapDetectedAt" readonly placeholder="—">
+        </div>
+      </div>
+
+      <!-- 填寫欄位 -->
+      <div class="ocap-field-group">
+        <label class="ocap-field-label">原因分析 <span class="req">*</span></label>
+        <textarea class="ocap-input" id="ocapCause" rows="3" placeholder="描述可能的異常原因（人機料法環）…"></textarea>
+      </div>
+      <div class="ocap-field-group">
+        <label class="ocap-field-label">矯正措施 <span class="req">*</span></label>
+        <textarea class="ocap-input" id="ocapAction" rows="3" placeholder="已採取或將採取的矯正行動…"></textarea>
+      </div>
+      <div class="ocap-row-2">
+        <div class="ocap-field-group">
+          <label class="ocap-field-label">負責人 <span class="req">*</span></label>
+          <input class="ocap-input" id="ocapOwner" placeholder="姓名 / 工號">
+        </div>
+        <div class="ocap-field-group">
+          <label class="ocap-field-label">預計完成日</label>
+          <input class="ocap-input" id="ocapDueDate" type="date">
+        </div>
+      </div>
+
+      <!-- OCAP Checklist（依 WBR Film OCAP 流程圖） -->
+      <div class="ocap-checklist">
+        <div class="ocap-checklist-title">📋 OCAP 逐步確認（WBR Film Fine 10 / FQC）
+          <span id="ocapCheckCount" style="font-size:11px;font-weight:400;color:#64748B;letter-spacing:0;text-transform:none"></span>
+        </div>
+        <label class="ocap-check-item" id="oci0"><input type="checkbox" onchange="onOcapCheck()"><span>Step 1 — 由另一位檢驗員再次確認缺陷型態</span></label>
+        <label class="ocap-check-item" id="oci1"><input type="checkbox" onchange="onOcapCheck()"><span>Step 2 — OOC/OOS 通知工程師等列，品管工程師確認真實存在</span></label>
+        <label class="ocap-check-item" id="oci2"><input type="checkbox" onchange="onOcapCheck()"><span>Step 3 — 確認顯影機參數設定符合 SOP 規格承接值</span></label>
+        <label class="ocap-check-item" id="oci3"><input type="checkbox" onchange="onOcapCheck()"><span>Step 4 — 確認曝光靜置時間是否符合規範</span></label>
+        <label class="ocap-check-item" id="oci4"><input type="checkbox" onchange="onOcapCheck()"><span>Step 5 — 確認導零光參數設定，確認台 Log</span></label>
+        <label class="ocap-check-item" id="oci5"><input type="checkbox" onchange="onOcapCheck()"><span>Step 6 — 確認覆膜後生產靜置時間</span></label>
+        <label class="ocap-check-item" id="oci6"><input type="checkbox" onchange="onOcapCheck()"><span>Step 7 — 確認覆膜機參數設定，依限膜機 SOP 確認</span></label>
+        <label class="ocap-check-item" id="oci7"><input type="checkbox" onchange="onOcapCheck()"><span>Step 8 — 確認烘箱參數操作設定</span></label>
+        <label class="ocap-check-item" id="oci8"><input type="checkbox" onchange="onOcapCheck()"><span>Step 9 — 重新取樣進行複驗，確認結果是否仍異常</span></label>
+        <label class="ocap-check-item" id="oci9"><input type="checkbox" onchange="onOcapCheck()"><span>Step 10 — 若仍異常，通知 KTC 調查（高階通報）</span></label>
+        <div class="ocap-progress">
+          <div class="ocap-progress-bar"><div class="ocap-progress-fill" id="ocapProgressFill" style="width:0%"></div></div>
+          <span class="ocap-progress-label" id="ocapProgressLabel">0 / 10</span>
+        </div>
+      </div>
+
+      <div class="ocap-status" id="ocapStatus"></div>
+    </div>
+    <div class="ocap-modal-footer">
+      <button class="ocap-cancel-btn" onclick="closeOcapModal()">取消</button>
+      <button class="ocap-submit-btn" id="ocapSubmitBtn" onclick="submitOcap()">✓ 提交 OCAP 記錄</button>
+    </div>
+  </div>
+</div>
 
 <div class="wrap">
   <div class="header">
@@ -279,6 +451,7 @@ body{font-family:var(--font-sans)}
     <button class="tab-btn" id="tabBtnRules" onclick="switchTab('rules')">📋 管制規則設定</button>
     <button class="tab-btn" id="tabBtnWeekly" onclick="switchTab('weekly')">📅 週期性分析</button>
     <button class="tab-btn" id="tabBtnImport" onclick="switchTab('import')">📥 資料匯入</button>
+    <button class="tab-btn" id="tabBtnOcap" onclick="switchTab('ocap')">🔔 OCAP 設定</button>
   </div>
 
   <!-- ── Chart Analysis Tab ── -->
@@ -720,6 +893,159 @@ function doGet(e) {
       </div>
     </div>
   </div><!-- /tabImport -->
+
+  <!-- ── OCAP Settings Tab ── -->
+  <div class="tab-page" id="tabOcap">
+    <div class="rules-desc" style="margin-bottom:1.25rem">
+      <b>OCAP 通知 &amp; 記錄設定：</b>設定 Apps Script Web App URL 後，違規批次提交的 OCAP 記錄將自動寫入 Google Sheet 的 <code>_ocap</code> 工作表，並依 <code>_recipients</code> 工作表的收件人清單發送 Email 通知。
+    </div>
+
+    <div class="ocap-settings-panel">
+      <div class="ocap-settings-title">
+        <span>⚙️ Apps Script 連線設定</span>
+        <span id="ocapConnStatus" style="font-size:11px;font-weight:400;color:#7C2D12"></span>
+      </div>
+      <div class="ocap-settings-grid">
+        <div class="ocap-settings-field" style="grid-column:1/-1">
+          <label>Apps Script Web App URL（寫入 OCAP + 發送 Email）</label>
+          <input type="text" id="ocapScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="ocap-settings-save" onclick="saveOcapSettings()">💾 儲存設定</button>
+        <button onclick="testOcapConnection()" style="height:32px;padding:0 14px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid #FED7AA;background:#fff;color:#9A3412;cursor:pointer">🔌 測試連線</button>
+      </div>
+    </div>
+
+    <div class="import-section">
+      <div class="import-section-title" style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:12px">📋 Google Sheet 設定步驟（一次性）</div>
+      <div style="font-size:12px;color:#475569;line-height:1.9;background:#F8FAFC;padding:14px 18px;border-radius:8px;border:1px solid #E2E8F0">
+        1. 在現有的 SPC Google Sheet 中，新增兩個工作表：
+           &nbsp;&nbsp;• <code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">_recipients</code> — 收件人清單（欄位：<code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">email, name, active</code>）<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">_ocap</code> — OCAP 記錄（欄位：<code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">timestamp, batch, rule, product, detectedAt, cause, action, owner, dueDate, checklist, checkCount</code>）<br>
+        2. 開啟 <b>擴充功能 → Apps Script</b>，將下方程式碼完整取代現有程式碼（或合併 doPost）。<br>
+        3. 重新部署：選「管理部署」→「編輯」→ 版本選「新版本」→ 更新。<br>
+        4. 將新部署 URL 填入上方欄位並儲存。
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;font-weight:700;color:#0284C7;font-size:12px">📋 展開完整 Apps Script 程式碼（含 OCAP + Email + 原有 saveLimit）</summary>
+          <pre id="ocapGasCode" style="margin-top:10px;background:#1E293B;color:#E2E8F0;padding:14px;border-radius:8px;font-size:10.5px;overflow-x:auto;white-space:pre;line-height:1.7">// ═══════════════════════════════════════════════════════════════════════
+// SPC Dashboard — Google Apps Script 後端（含 OCAP + Email + CL 同步）
+// 部署為「網路應用程式」，執行身分：我、存取：所有人
+// ═══════════════════════════════════════════════════════════════════════
+const SHEET_ID = 'YOUR_SPREADSHEET_ID_HERE'; // ← 替換成你的試算表 ID
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss   = SpreadsheetApp.openById(SHEET_ID);
+
+    // ── 1. 儲存管制界限（原有功能）──────────────────────────────────
+    if (data.action === 'saveLimit') {
+      const { sheetIdx, metricKey, lo, hi, time, editor, reason, oldLo, oldHi } = data;
+      const limSheet  = ss.getSheetByName('_cl_limits');
+      const limData   = limSheet.getDataRange().getValues();
+      let found = false;
+      for (let i = 1; i < limData.length; i++) {
+        if (String(limData[i][0]) === String(sheetIdx) && limData[i][1] === metricKey) {
+          limSheet.getRange(i + 1, 3, 1, 4).setValues([[lo, hi, time, editor]]);
+          found = true; break;
+        }
+      }
+      if (!found) limSheet.appendRow([sheetIdx, metricKey, lo, hi, time, editor]);
+      ss.getSheetByName('_cl_history').appendRow(
+        [time, sheetIdx, metricKey, editor, reason, oldLo, oldHi, lo, hi]);
+      return jsonOk({ saved: true });
+    }
+
+    // ── 2. 提交 OCAP 記錄 ─────────────────────────────────────────
+    if (data.action === 'saveOcap') {
+      const { batch, rule, product, detectedAt, cause, action, owner,
+              dueDate, checklist, checkCount } = data;
+      const ts = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+      const ocapSheet = ss.getSheetByName('_ocap');
+      if (!ocapSheet) return jsonErr('找不到 _ocap 工作表');
+      ocapSheet.appendRow([ts, batch, rule, product, detectedAt,
+                           cause, action, owner, dueDate, checklist, checkCount]);
+      return jsonOk({ saved: true });
+    }
+
+    // ── 3. 發送 Email 通知 ────────────────────────────────────────
+    if (data.action === 'sendEmail') {
+      const { batch, rule, product, detectedAt, violations } = data;
+      const recipSheet = ss.getSheetByName('_recipients');
+      if (!recipSheet) return jsonErr('找不到 _recipients 工作表');
+      const rows = recipSheet.getDataRange().getValues();
+      const recipients = rows.slice(1)
+        .filter(r => String(r[2]).toLowerCase() === 'true' || r[2] === true || r[2] === 1)
+        .map(r => ({ email: r[0], name: r[1] }))
+        .filter(r => r.email);
+
+      if (!recipients.length) return jsonErr('_recipients 無有效收件人（active=true）');
+
+      const subject = `🚨 SPC OOC 通知 — ${product} 批次 ${batch}`;
+      const body = buildEmailBody({ batch, rule, product, detectedAt, violations });
+
+      recipients.forEach(r => {
+        GmailApp.sendEmail(r.email, subject, '', { htmlBody: body, name: 'SPC Dashboard' });
+      });
+      return jsonOk({ sent: recipients.length, to: recipients.map(r => r.email) });
+    }
+
+    return jsonErr('Unknown action: ' + data.action);
+
+  } catch(err) {
+    return jsonErr(err.message);
+  }
+}
+
+function doGet(e) {
+  if (e.parameter.ping) return jsonOk({ status: 'SPC OCAP backend ready' });
+  return ContentService.createTextOutput('SPC DB ready').setMimeType(ContentService.MimeType.TEXT);
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────
+function jsonOk(obj)  { return ContentService.createTextOutput(JSON.stringify({ status:'ok',  ...obj })).setMimeType(ContentService.MimeType.JSON); }
+function jsonErr(msg) { return ContentService.createTextOutput(JSON.stringify({ status:'error', message: msg })).setMimeType(ContentService.MimeType.JSON); }
+
+function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
+  const rows = (violations || []).map(v =>
+    `&lt;tr&gt;&lt;td style="padding:6px 12px;border-bottom:1px solid #E2E8F0"&gt;${v.batch}&lt;/td&gt;
+     &lt;td style="padding:6px 12px;border-bottom:1px solid #E2E8F0"&gt;${v.rule}&lt;/td&gt;
+     &lt;td style="padding:6px 12px;border-bottom:1px solid #E2E8F0"&gt;${v.value ?? '—'}&lt;/td&gt;&lt;/tr&gt;`
+  ).join('');
+  return `&lt;div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto"&gt;
+    &lt;div style="background:#DC2626;color:#fff;padding:20px 24px;border-radius:8px 8px 0 0"&gt;
+      &lt;h2 style="margin:0;font-size:18px"&gt;🚨 SPC OOC 管制違規通知&lt;/h2&gt;
+    &lt;/div&gt;
+    &lt;div style="background:#fff;border:1px solid #E2E8F0;border-top:none;padding:20px 24px;border-radius:0 0 8px 8px"&gt;
+      &lt;p style="color:#475569;font-size:14px;margin:0 0 16px"&gt;管制圖偵測到以下違規，請確認並填寫 OCAP 矯正行動計畫。&lt;/p&gt;
+      &lt;table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #E2E8F0;border-radius:6px;overflow:hidden"&gt;
+        &lt;tr style="background:#F1F5F9"&gt;
+          &lt;th style="padding:8px 12px;text-align:left;color:#475569"&gt;批次&lt;/th&gt;
+          &lt;th style="padding:8px 12px;text-align:left;color:#475569"&gt;違規規則&lt;/th&gt;
+          &lt;th style="padding:8px 12px;text-align:left;color:#475569"&gt;數值&lt;/th&gt;
+        &lt;/tr&gt;
+        ${rows || '&lt;tr&gt;&lt;td colspan="3" style="padding:8px 12px;color:#94A3B8"&gt;—&lt;/td&gt;&lt;/tr&gt;'}
+      &lt;/table&gt;
+      &lt;p style="font-size:12px;color:#94A3B8;margin:16px 0 0"&gt;偵測時間：${detectedAt} ｜ 產品：${product}&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;`;
+}</pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- OCAP Log viewer -->
+    <div class="import-section" style="margin-top:0">
+      <div class="import-section-title" style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <span>📑 本次 OCAP 記錄（本機暫存）</span>
+        <button onclick="clearLocalOcapLog()" style="height:28px;padding:0 12px;font-size:11px;border-radius:5px;border:1px solid #CBD5E1;background:#fff;color:#64748B;cursor:pointer">🗑 清除</button>
+      </div>
+      <div id="ocapLogBody">
+        <p style="font-size:12px;color:#94A3B8;font-style:italic;padding:4px 0">尚無 OCAP 記錄</p>
+      </div>
+    </div>
+  </div><!-- /tabOcap -->
 
 </div><!-- /wrap -->
 
@@ -2260,7 +2586,7 @@ document.getElementById('metricSel').addEventListener('change', ()=>{
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['chart','rules','weekly','import'].forEach(t => {
+  ['chart','rules','weekly','import','ocap'].forEach(t => {
     const btn = document.getElementById('tabBtn'+t.charAt(0).toUpperCase()+t.slice(1));
     const page = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if(btn) btn.classList.toggle('active', t===tab);
@@ -2273,6 +2599,9 @@ function switchTab(tab) {
   if(tab==='weekly') {
     buildWeeklyMetricOptions();
     renderWeeklyPage();
+  }
+  if(tab==='ocap') {
+    if(typeof renderOcapLog === 'function') renderOcapLog();
   }
 }
 
@@ -3183,4 +3512,371 @@ setTimeout(function() {
   lsRestore();
   updateLsInfo();
 }, 0);
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     OCAP Module — Alert Banner, Modal, Email, GSheet Write
+═══════════════════════════════════════════════════════════════════ -->
+<script>
+// ── State ─────────────────────────────────────────────────────────────
+const OCAP_LS_KEY = 'spc_ocap_settings';
+const OCAP_LOG_KEY = 'spc_ocap_log';
+let _ocapCurrentViolation = null; // { batch, rule, product, detectedAt, value }
+let _ocapViolationList    = [];   // all current violations for email
+
+// ── Settings persistence ──────────────────────────────────────────────
+function loadOcapSettings() {
+  try {
+    const raw = localStorage.getItem(OCAP_LS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function saveOcapSettings() {
+  const url = document.getElementById('ocapScriptUrl').value.trim();
+  try {
+    localStorage.setItem(OCAP_LS_KEY, JSON.stringify({ scriptUrl: url }));
+    setOcapConnStatus('✅ 已儲存', '#065F46');
+  } catch(e) {
+    setOcapConnStatus('❌ 儲存失敗：' + e.message, '#B91C1C');
+  }
+}
+
+function setOcapConnStatus(msg, color) {
+  const el = document.getElementById('ocapConnStatus');
+  if (el) { el.textContent = msg; el.style.color = color || '#64748B'; }
+}
+
+async function testOcapConnection() {
+  const url = document.getElementById('ocapScriptUrl').value.trim();
+  if (!url) { setOcapConnStatus('請先填入 Apps Script URL', '#B91C1C'); return; }
+  setOcapConnStatus('🔄 測試中…', '#1D4ED8');
+  try {
+    const resp = await fetch(url + '?ping=1');
+    const json = await resp.json();
+    if (json.status === 'ok') setOcapConnStatus('✅ 連線成功：' + (json.status || ''), '#065F46');
+    else setOcapConnStatus('⚠️ 回應異常：' + JSON.stringify(json), '#92400E');
+  } catch(err) {
+    setOcapConnStatus('❌ 連線失敗：' + err.message, '#B91C1C');
+  }
+}
+
+// Restore settings on load
+setTimeout(function() {
+  const s = loadOcapSettings();
+  if (s.scriptUrl) document.getElementById('ocapScriptUrl').value = s.scriptUrl;
+}, 50);
+
+// ── Alert Banner ──────────────────────────────────────────────────────
+/**
+ * Call this after violations are recomputed (hook into existing render cycle).
+ * violations = [{ batch, rule, product, value }]
+ */
+function showOcapBanner(violations) {
+  const banner = document.getElementById('ocapAlertBanner');
+  const list   = document.getElementById('ocapAlertList');
+  if (!banner || !list) return;
+
+  _ocapViolationList = violations || [];
+
+  if (!violations || violations.length === 0) {
+    banner.classList.remove('show');
+    return;
+  }
+
+  list.innerHTML = violations.slice(0, 8).map(v =>
+    `<span class="ocap-viol-chip" onclick="openOcapModal(${JSON.stringify(v).replace(/"/g,'&quot;')})">
+       ⚠ ${v.batch} · ${v.rule}
+     </span>`
+  ).join('') + (violations.length > 8 ? `<span style="font-size:11px;color:#B91C1C">…等 ${violations.length} 筆</span>` : '');
+
+  banner.classList.add('show');
+}
+
+function dismissOcapBanner() {
+  const banner = document.getElementById('ocapAlertBanner');
+  if (banner) banner.classList.remove('show');
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────
+function openOcapModal(violation) {
+  _ocapCurrentViolation = violation;
+  const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+
+  document.getElementById('ocapBatch').value       = violation.batch      || '—';
+  document.getElementById('ocapRule').value        = violation.rule       || '—';
+  document.getElementById('ocapProduct').value     = violation.product    || '—';
+  document.getElementById('ocapDetectedAt').value  = violation.detectedAt || now;
+  document.getElementById('ocapModalSub').textContent =
+    `${violation.product || ''} — ${violation.rule || ''} 管制違規`;
+
+  // Reset fill-in fields
+  document.getElementById('ocapCause').value  = '';
+  document.getElementById('ocapAction').value = '';
+  document.getElementById('ocapOwner').value  = '';
+  document.getElementById('ocapDueDate').value = '';
+
+  // Reset checklist
+  document.querySelectorAll('#ocapModal input[type=checkbox]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('label').classList.remove('done');
+  });
+  onOcapCheck();
+
+  setOcapStatus('', '');
+  document.getElementById('ocapModalOverlay').classList.add('show');
+}
+
+function closeOcapModal() {
+  document.getElementById('ocapModalOverlay').classList.remove('show');
+  _ocapCurrentViolation = null;
+}
+
+function onOcapCheck() {
+  const boxes   = document.querySelectorAll('#ocapModal .ocap-check-item input[type=checkbox]');
+  const total   = boxes.length;
+  let checked   = 0;
+  boxes.forEach(cb => {
+    const label = cb.closest('label');
+    if (cb.checked) { checked++; label.classList.add('done'); }
+    else             { label.classList.remove('done'); }
+  });
+  const pct = total ? Math.round(checked / total * 100) : 0;
+  document.getElementById('ocapProgressFill').style.width = pct + '%';
+  document.getElementById('ocapProgressLabel').textContent = `${checked} / ${total}`;
+  document.getElementById('ocapCheckCount').textContent = `（${checked}/${total} 已確認）`;
+}
+
+function setOcapStatus(msg, type) {
+  const el = document.getElementById('ocapStatus');
+  if (!el) return;
+  el.className = 'ocap-status' + (type ? ' ' + type : '');
+  el.textContent = msg;
+}
+
+// ── Submit OCAP ───────────────────────────────────────────────────────
+async function submitOcap() {
+  const cause  = document.getElementById('ocapCause').value.trim();
+  const action = document.getElementById('ocapAction').value.trim();
+  const owner  = document.getElementById('ocapOwner').value.trim();
+  if (!cause)  { setOcapStatus('❌ 請填寫原因分析', 'err'); return; }
+  if (!action) { setOcapStatus('❌ 請填寫矯正措施', 'err'); return; }
+  if (!owner)  { setOcapStatus('❌ 請填寫負責人',   'err'); return; }
+
+  const boxes = document.querySelectorAll('#ocapModal .ocap-check-item input[type=checkbox]');
+  const checkSteps = [];
+  boxes.forEach((cb, i) => {
+    if (cb.checked) checkSteps.push(`Step ${i+1}`);
+  });
+
+  const payload = {
+    action:      'saveOcap',
+    batch:       document.getElementById('ocapBatch').value,
+    rule:        document.getElementById('ocapRule').value,
+    product:     document.getElementById('ocapProduct').value,
+    detectedAt:  document.getElementById('ocapDetectedAt').value,
+    cause, action, owner,
+    dueDate:     document.getElementById('ocapDueDate').value || '—',
+    checklist:   checkSteps.join(', '),
+    checkCount:  checkSteps.length + ' / ' + boxes.length,
+  };
+
+  const scriptUrl = loadOcapSettings().scriptUrl;
+  const btn = document.getElementById('ocapSubmitBtn');
+
+  if (!scriptUrl) {
+    // Save locally only
+    saveOcapLocally(payload);
+    setOcapStatus('✅ 已儲存至本機記錄（未設定 Apps Script URL）', 'ok');
+    setTimeout(closeOcapModal, 1800);
+    return;
+  }
+
+  setOcapStatus('🔄 提交中…', 'loading');
+  btn.disabled = true;
+  try {
+    const resp = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const json = await resp.json();
+    if (json.status === 'ok') {
+      saveOcapLocally(payload);
+      setOcapStatus('✅ OCAP 記錄已成功寫入 Google Sheet！', 'ok');
+      setTimeout(closeOcapModal, 1800);
+    } else {
+      setOcapStatus('❌ 寫入失敗：' + (json.message || JSON.stringify(json)), 'err');
+    }
+  } catch(err) {
+    saveOcapLocally(payload);
+    setOcapStatus('⚠️ 網路錯誤，已儲存至本機：' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Local OCAP log ────────────────────────────────────────────────────
+function saveOcapLocally(payload) {
+  try {
+    const raw = localStorage.getItem(OCAP_LOG_KEY);
+    const log = raw ? JSON.parse(raw) : [];
+    log.unshift({ ...payload, savedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) });
+    localStorage.setItem(OCAP_LOG_KEY, JSON.stringify(log.slice(0, 50)));
+    renderOcapLog();
+  } catch(e) {}
+}
+
+function renderOcapLog() {
+  const el = document.getElementById('ocapLogBody');
+  if (!el) return;
+  try {
+    const raw = localStorage.getItem(OCAP_LOG_KEY);
+    const log = raw ? JSON.parse(raw) : [];
+    if (!log.length) {
+      el.innerHTML = '<p style="font-size:12px;color:#94A3B8;font-style:italic;padding:4px 0">尚無 OCAP 記錄</p>';
+      return;
+    }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#F1F5F9">
+        <th style="padding:6px 10px;text-align:left;color:#475569;font-weight:600;border-bottom:1px solid #E2E8F0">時間</th>
+        <th style="padding:6px 10px;text-align:left;color:#475569;font-weight:600;border-bottom:1px solid #E2E8F0">批次</th>
+        <th style="padding:6px 10px;text-align:left;color:#475569;font-weight:600;border-bottom:1px solid #E2E8F0">規則</th>
+        <th style="padding:6px 10px;text-align:left;color:#475569;font-weight:600;border-bottom:1px solid #E2E8F0">負責人</th>
+        <th style="padding:6px 10px;text-align:left;color:#475569;font-weight:600;border-bottom:1px solid #E2E8F0">Checklist</th>
+      </tr></thead>
+      <tbody>${log.map(r => `<tr style="border-bottom:1px solid #F1F5F9">
+        <td style="padding:5px 10px;color:#64748B;white-space:nowrap">${r.savedAt}</td>
+        <td style="padding:5px 10px;color:#1E293B;font-weight:600">${r.batch}</td>
+        <td style="padding:5px 10px;color:#475569">${r.rule}</td>
+        <td style="padding:5px 10px;color:#475569">${r.owner}</td>
+        <td style="padding:5px 10px;color:#475569">${r.checkCount}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  } catch(e) {
+    el.innerHTML = '<p style="font-size:12px;color:#B91C1C">讀取本機記錄失敗</p>';
+  }
+}
+
+function clearLocalOcapLog() {
+  if (!confirm('確定清除本機所有 OCAP 記錄？')) return;
+  localStorage.removeItem(OCAP_LOG_KEY);
+  renderOcapLog();
+}
+
+// ── Email notification ────────────────────────────────────────────────
+async function sendOcapEmail() {
+  const scriptUrl = loadOcapSettings().scriptUrl;
+  const btn = document.getElementById('ocapEmailBtn');
+  if (!scriptUrl) {
+    alert('請先在「OCAP 設定」頁面填入 Apps Script URL');
+    return;
+  }
+  if (!_ocapViolationList.length) {
+    alert('目前無違規批次');
+    return;
+  }
+
+  const first = _ocapViolationList[0];
+  const payload = {
+    action:      'sendEmail',
+    batch:       first.batch,
+    rule:        first.rule,
+    product:     first.product || '—',
+    detectedAt:  new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
+    violations:  _ocapViolationList,
+  };
+
+  btn.textContent = '⏳ 發送中…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const json = await resp.json();
+    if (json.status === 'ok') {
+      btn.textContent = `✅ 已發送至 ${json.sent} 位`;
+      setTimeout(() => { btn.textContent = '📧 Email 通知'; btn.disabled = false; }, 3000);
+    } else {
+      alert('發送失敗：' + (json.message || JSON.stringify(json)));
+      btn.textContent = '📧 Email 通知'; btn.disabled = false;
+    }
+  } catch(err) {
+    alert('網路錯誤：' + err.message);
+    btn.textContent = '📧 Email 通知'; btn.disabled = false;
+  }
+}
+
+// ── Hook into violation render ─────────────────────────────────────────
+// Intercepts the existing rvBody rendering to make rows clickable
+// and calls showOcapBanner with the current violation list.
+//
+// We wait for the rvBody to be populated, then watch for mutations.
+(function hookViolationTable() {
+  const rvBody = document.getElementById('rvBody');
+  if (!rvBody) return;
+
+  function extractAndShowBanner() {
+    const chips = document.querySelectorAll('.cv-row, .rv-table tbody tr');
+    const violations = [];
+    // From inline chart violations (.cv-row)
+    document.querySelectorAll('.cv-row').forEach(row => {
+      const batch   = row.querySelector('.cv-batch')?.textContent?.trim() || '—';
+      const valEl   = row.querySelector('.cv-val')?.textContent?.trim()   || '';
+      const ruleEls = row.querySelectorAll('.cv-tag');
+      const rules   = [...ruleEls].map(el => el.textContent.trim()).join(', ');
+      const product = (document.getElementById('sheetSel')?.selectedOptions[0]?.text || '') + ' / ' +
+                      (document.getElementById('metricSel')?.selectedOptions[0]?.text || '');
+      violations.push({ batch, rule: rules || '違規', product, value: valEl,
+                        detectedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) });
+    });
+    showOcapBanner(violations);
+
+    // Make .cv-row chips clickable to open OCAP modal
+    document.querySelectorAll('.cv-batch').forEach(el => {
+      const row = el.closest('.cv-row');
+      if (!row || row.dataset.ocapBound) return;
+      row.dataset.ocapBound = '1';
+      row.style.cursor = 'pointer';
+      row.title = '點擊填寫 OCAP 矯正計畫';
+      row.addEventListener('click', () => {
+        const batch   = el.textContent.trim();
+        const valEl   = row.querySelector('.cv-val')?.textContent?.trim() || '';
+        const ruleEls = row.querySelectorAll('.cv-tag');
+        const rules   = [...ruleEls].map(t => t.textContent.trim()).join(', ');
+        const product = (document.getElementById('sheetSel')?.selectedOptions[0]?.text || '') + ' / ' +
+                        (document.getElementById('metricSel')?.selectedOptions[0]?.text || '');
+        openOcapModal({ batch, rule: rules || '違規', product, value: valEl,
+                        detectedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) });
+      });
+    });
+
+    // Make rv-table rows clickable too
+    document.querySelectorAll('.rv-table tbody tr').forEach(tr => {
+      if (tr.dataset.ocapBound) return;
+      tr.dataset.ocapBound = '1';
+      tr.style.cursor = 'pointer';
+      tr.title = '點擊填寫 OCAP 矯正計畫';
+      tr.addEventListener('click', () => {
+        const cells = tr.querySelectorAll('td');
+        const batch  = cells[0]?.textContent?.trim() || '—';
+        const valTxt = cells[1]?.textContent?.trim() || '';
+        const ruleTxt= cells[2]?.textContent?.trim() || '違規';
+        const product = (document.getElementById('ruleSheetSel')?.selectedOptions[0]?.text || '') + ' / ' +
+                        (document.getElementById('ruleMetricSel')?.selectedOptions[0]?.text || '');
+        openOcapModal({ batch, rule: ruleTxt, product, value: valTxt,
+                        detectedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) });
+      });
+    });
+  }
+
+  // Observe mutations on the violation containers
+  const obs = new MutationObserver(() => extractAndShowBanner());
+  obs.observe(rvBody, { childList: true, subtree: true });
+
+  const chartViol = document.getElementById('chartViolations');
+  if (chartViol) obs.observe(chartViol, { childList: true, subtree: true });
+})();
 </script>
