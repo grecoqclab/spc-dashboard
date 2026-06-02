@@ -2897,6 +2897,7 @@ function getTimeBaselineN(series, recentDays) {
 
   const recentCutoff = new Date(latestDate);
   recentCutoff.setDate(recentCutoff.getDate() - recentDays);
+  recentCutoff.setHours(0, 0, 0, 0); // normalize to start of day
 
   const baselineCutoff = new Date(latestDate);
   baselineCutoff.setFullYear(baselineCutoff.getFullYear() - 1);
@@ -2905,7 +2906,7 @@ function getTimeBaselineN(series, recentDays) {
   // baselineN = number of points before recentCutoff (within the year window)
   // We'll re-slice the series to only the year window before passing downstream
   const yearSeries = series.filter(s => new Date(s.date) >= baselineCutoff);
-  const baselineN = yearSeries.filter(s => new Date(s.date) < recentCutoff).length;
+  const baselineN = yearSeries.filter(s => { const d = new Date(s.date); d.setHours(0,0,0,0); return d < recentCutoff; }).length;
   const recentCount = yearSeries.length - baselineN;
 
   return { yearSeries, baselineN, recentCount, recentCutoff, baselineCutoff, latestDate };
