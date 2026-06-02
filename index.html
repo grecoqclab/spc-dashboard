@@ -3071,9 +3071,14 @@ function lsRestore() {
     if(state.gsSheetId)   document.getElementById('gsSheetId').value   = state.gsSheetId;
     if(state.gsSheetName) document.getElementById('gsSheetName').value = state.gsSheetName;
 
-    // Restore imported data
+    // Restore imported data (filter out builtin keys)
     if(state.importedRaw && Object.keys(state.importedRaw).length) {
-      loadNewData(state.importedRaw, state.source || 'gsheet');
+      const _builtinKeys = new Set(['出KTC資料-solution','出KTC資料-WBR5280','出KTC資料-WBR5200']);
+      const filteredRaw = {};
+      Object.keys(state.importedRaw).forEach(k => {
+        if(!_builtinKeys.has(k)) filteredRaw[k] = state.importedRaw[k];
+      });
+      if(Object.keys(filteredRaw).length) loadNewData(filteredRaw, state.source || 'gsheet');
     }
 
     // Restore custom limits
