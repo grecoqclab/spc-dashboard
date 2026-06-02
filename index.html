@@ -1731,7 +1731,7 @@ async function gsDbLoad() {
 
     gsDbConnected = true;
     setGsDbStatus('ok', `✅ 已連接 Google Sheets 資料庫（載入 ${loadedCount} 筆界限）`);
-    update();
+    if(SHEETS.length) update();
     return true;
   } catch(err) {
     setGsDbStatus('err', `❌ 讀取失敗：${err.message}`);
@@ -1916,6 +1916,7 @@ function getSeriesData(sheetIdx, metricKey) {
   const sheet = SHEETS[sheetIdx];
   const rows = RAW[sheet];
   const met = METRICS.find(x=>x.key===metricKey);
+  if(!rows || !met) return [];
   return rows.map(r => {
     const vals = met.extract(r).filter(v=>v!=null);
     const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
