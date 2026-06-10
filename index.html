@@ -1444,7 +1444,8 @@ function fetchSheetByName(sheetId, sheetName) {
     const url = 'https://docs.google.com/spreadsheets/d/' + sheetId +
       '/gviz/tq?tqx=out:json;responseHandler:' + cbName +
       '&sheet=' + encodeURIComponent(sheetName) +
-      '&tq=' + encodeURIComponent('select *');
+      '&tq=' + encodeURIComponent('select *') +
+      '&_t=' + Date.now();
 
     const script = document.createElement('script');
     script.id = '_gsScript';
