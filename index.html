@@ -3786,17 +3786,24 @@ async function sendOcapEmail() {
   btn.textContent = '⏳ 發送中…';
   btn.disabled = true;
   try {
-    // 使用 no-cors 模式避免 CORS preflight 被 Apps Script 拒絕
-    // no-cors 下無法讀取回傳內容（opaque response），但 POST 會確實送出
-    await fetch(scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },  // text/plain 不觸發 preflight
-      body: JSON.stringify(payload),
+    // 改用 GET 請求傳遞參數，完全避開 CORS preflight 問題
+    const params = new URLSearchParams({
+      action:      'sendEmail',
+      batch:       payload.batch,
+      product:     payload.product,
+      rule:        payload.rule,
+      detectedAt:  payload.detectedAt,
+      violations:  JSON.stringify(payload.violations),
     });
-    // no-cors 模式下 response 永遠是 opaque，無法判斷 status，假設成功
-    btn.textContent = '✅ 已送出（請確認信箱）';
-    setTimeout(() => { btn.textContent = '📧 Email 通知'; btn.disabled = false; }, 4000);
+    const resp = await fetch(scriptUrl + '?' + params.toString());
+    const json = await resp.json();
+    if (json.status === 'ok') {
+      btn.textContent = `✅ 已發送至 ${json.sent} 位`;
+      setTimeout(() => { btn.textContent = '📧 Email 通知'; btn.disabled = false; }, 3000);
+    } else {
+      alert('發送失敗：' + (json.message || JSON.stringify(json)));
+      btn.textContent = '📧 Email 通知'; btn.disabled = false;
+    }
   } catch(err) {
     alert('網路錯誤：' + err.message);
     btn.textContent = '📧 Email 通知'; btn.disabled = false;
