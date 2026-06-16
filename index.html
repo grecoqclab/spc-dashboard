@@ -3552,7 +3552,8 @@ async function testOcapConnection() {
   try {
     const resp = await fetch(url + '?ping=1');
     const json = await resp.json();
-    if (json.status === 'ok') setOcapConnStatus('✅ 連線成功：' + (json.status || ''), '#065F46');
+    if (json.status === 'ok' || JSON.stringify(json).includes('ready'))
+      setOcapConnStatus('✅ 連線成功', '#065F46');
     else setOcapConnStatus('⚠️ 回應異常：' + JSON.stringify(json), '#92400E');
   } catch(err) {
     setOcapConnStatus('❌ 連線失敗：' + err.message, '#B91C1C');
