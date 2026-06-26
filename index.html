@@ -2728,7 +2728,7 @@ function update() {
   // ── Run active SPC rules for this metric ──────────────────────────────
   const chartSheetIdx = parseInt(document.getElementById('sheetSel').value);
   const enabledSetChart = getRuleKey(chartSheetIdx, metricKey);
-  const chartViolations = runRuleCheck(vals, spc.mean, spc.sigma, enabledSetChart);
+  const chartViolations = runRuleCheck(vals, spc.mean, spc.sigma, enabledSetChart, activeUCL, activeLCL);
   // Map pointIdx → list of violated rules
   const violByIdx = {};
   chartViolations.forEach(v => {
@@ -3193,11 +3193,17 @@ function buildRuleMetricOptions(sheetIdx) {
   });
 }
 
-function runRuleCheck(vals, mean, sigma, enabledSet) {
+function runRuleCheck(vals, mean, sigma, enabledSet, effectiveUCL, effectiveLCL) {
   const allViolations = [];
   SPC_RULES.forEach(rule => {
     if(!enabledSet.has(rule.id)) return;
-    const hits = rule.check(vals, mean, sigma);
+    let hits;
+    if(rule.id === 'R1' && effectiveUCL !== undefined && effectiveLCL !== undefined) {
+      // R1: use effective limits (custom or stat) instead of always ±3σ
+      hits = vals.map((v,i) => (v > effectiveUCL || v < effectiveLCL) ? {i, detail:'超出管制界限'} : null).filter(Boolean);
+    } else {
+      hits = rule.check(vals, mean, sigma);
+    }
     hits.forEach(h => allViolations.push({ruleId:rule.id, ruleName:rule.name, pointIdx:h.i, detail:h.detail}));
   });
   // Deduplicate by point index but keep all rule matches
