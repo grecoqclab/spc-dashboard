@@ -2457,8 +2457,34 @@ function applySeriesFilter(series) {
 }
 
 function onFilterChange() {
-  filterState.from = document.getElementById('filterFrom').value || null;
-  filterState.to   = document.getElementById('filterTo').value   || null;
+  const fromVal = document.getElementById('filterFrom').value || null;
+  const toVal   = document.getElementById('filterTo').value   || null;
+
+  // 驗證日期範圍：起始日不可晚於結束日
+  if(fromVal && toVal && fromVal > toVal) {
+    // 自動交換：讓使用者不需手動修正
+    document.getElementById('filterFrom').value = toVal;
+    document.getElementById('filterTo').value   = fromVal;
+    filterState.from = toVal;
+    filterState.to   = fromVal;
+    // 顯示提示
+    const bar = document.getElementById('filterBar');
+    let warn = document.getElementById('filterRangeWarn');
+    if(!warn) {
+      warn = document.createElement('div');
+      warn.id = 'filterRangeWarn';
+      warn.style.cssText = 'font-size:11px;color:#B45309;background:#FEF3C7;border:1px solid #FCD34D;border-radius:5px;padding:4px 10px;margin-top:6px;display:flex;align-items:center;gap:6px';
+      warn.innerHTML = '⚠ 起始日晚於結束日，已自動對調日期範圍。';
+      bar.appendChild(warn);
+      setTimeout(function(){ if(warn.parentNode) warn.parentNode.removeChild(warn); }, 3000);
+    }
+  } else {
+    filterState.from = fromVal;
+    filterState.to   = toVal;
+    // 移除舊警告
+    const warn = document.getElementById('filterRangeWarn');
+    if(warn && warn.parentNode) warn.parentNode.removeChild(warn);
+  }
   update();
 }
 function clearFilter() {
@@ -2626,6 +2652,14 @@ function update() {
   const series = kept;
   if(!series.length) {
     document.getElementById('metricCards').innerHTML = '<div style="padding:20px;color:#94A3B8;font-size:13px">篩選後無資料，請放寬時間範圍或還原排除點。</div>';
+    // 清空舊圖表，避免顯示過期資料
+    if(xChartInst){ xChartInst.destroy(); xChartInst = null; }
+    if(mrChartInst){ mrChartInst.destroy(); mrChartInst = null; }
+    const xCanvas = document.getElementById('xChart');
+    const mrCanvas = document.getElementById('mrChart');
+    if(xCanvas) xCanvas.getContext('2d').clearRect(0, 0, xCanvas.width, xCanvas.height);
+    if(mrCanvas) mrCanvas.getContext('2d').clearRect(0, 0, mrCanvas.width, mrCanvas.height);
+    document.getElementById('chartViolations').style.display = 'none';
     return;
   }
   const spc = calcSPC(series);
