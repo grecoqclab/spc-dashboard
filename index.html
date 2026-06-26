@@ -1772,7 +1772,13 @@ function parseGvizTable(table) {
       const val = cell ? (cell.v !== null && cell.v !== undefined ? cell.v : null) : null;
       // Format date cells: gviz returns Date(year,month0,day)
       if(cell && cell.f && /^\d{4}\/\d/.test(cell.f)) {
-        obj[HEADER_MAP[h] || h] = cell.f.replace(/\//g,'-');
+        // 確保月/日補零，避免字串比較錯誤（"2025-1-5" vs "2025-01-05"）
+        const fp = cell.f.split('/');
+        if(fp.length === 3) {
+          obj[HEADER_MAP[h] || h] = fp[0] + '-' + fp[1].padStart(2,'0') + '-' + fp[2].padStart(2,'0');
+        } else {
+          obj[HEADER_MAP[h] || h] = cell.f.replace(/\//g,'-');
+        }
       } else {
         obj[HEADER_MAP[h] || h] = val;
       }
@@ -1785,9 +1791,19 @@ function parseGvizTable(table) {
       if(dm) {
         obj['qc_date'] = dm[1] + '-' + String(+dm[2]+1).padStart(2,'0') + '-' + String(+dm[3]).padStart(2,'0');
       } else if(dv instanceof Date) {
-        obj['qc_date'] = dv.toISOString().slice(0,10);
+        // 使用本地日期避免 UTC 時區偏移一天
+        const _y = dv.getFullYear();
+        const _mo = String(dv.getMonth()+1).padStart(2,'0');
+        const _da = String(dv.getDate()).padStart(2,'0');
+        obj['qc_date'] = _y + '-' + _mo + '-' + _da;
       } else if(/^\d{4}[\/\-]\d/.test(ds)) {
-        obj['qc_date'] = ds.replace(/\//g,'-').slice(0,10);
+        // 確保補零：YYYY/M/D → YYYY-MM-DD
+        const _parts = ds.replace(/\//g,'-').split('-');
+        if(_parts.length === 3) {
+          obj['qc_date'] = _parts[0] + '-' + _parts[1].padStart(2,'0') + '-' + _parts[2].padStart(2,'0');
+        } else {
+          obj['qc_date'] = ds.replace(/\//g,'-').slice(0,10);
+        }
       }
     }
     if(!obj['batch'] || !obj['qc_date']) continue;
