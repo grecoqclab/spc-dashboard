@@ -609,6 +609,33 @@ function doGet(e) {
     </div>
   </div>
 
+  <!-- ── 時間篩選 + 異常點排除工具列 ── -->
+  <div id="filterBar" style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:5px">🔍 資料篩選</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#64748B">起始日</label>
+        <input type="date" id="filterFrom" onchange="onFilterChange()" style="height:30px;font-size:12px;border:1px solid #CBD5E1;border-radius:5px;padding:0 6px">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:12px;color:#64748B">結束日</label>
+        <input type="date" id="filterTo" onchange="onFilterChange()" style="height:30px;font-size:12px;border:1px solid #CBD5E1;border-radius:5px;padding:0 6px">
+      </div>
+      <button onclick="quickRange(30)" class="qr-btn" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#fff;color:#475569;cursor:pointer">近30天</button>
+      <button onclick="quickRange(90)" class="qr-btn" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#fff;color:#475569;cursor:pointer">近90天</button>
+      <button onclick="clearFilter()" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#F8FAFC;color:#475569;cursor:pointer">清除篩選</button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <label style="font-size:12px;color:#64748B;display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="excludeMode" onchange="toggleExcludeMode()" style="cursor:pointer">
+          點擊圖表排除異常點
+        </label>
+        <span id="excludedCount" style="font-size:11px;color:#92400E;background:#FEF3C7;padding:3px 10px;border-radius:10px;display:none"></span>
+        <button onclick="clearExcluded()" id="clearExclBtn" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #FCD34D;border-radius:5px;background:#FFFBEB;color:#92400E;cursor:pointer;display:none">還原排除點</button>
+      </div>
+    </div>
+    <div id="excludedList" style="margin-top:10px;display:none"></div>
+  </div>
+
   <div class="metrics" id="metricCards"></div>
 
   <div class="chart-card">
@@ -2394,6 +2421,101 @@ function getSeriesData(sheetIdx, metricKey) {
   }).filter(x=>x.value!=null);
 }
 
+// ── 篩選狀態 ──
+let filterState = { from: null, to: null };
+let excludeMode = false;
+// 排除點：key = sheetIdx|metricKey，value = Set(batch+date 組成的唯一鍵)
+let excludedPoints = {};
+
+function curFilterKey() {
+  const sheetIdx = document.getElementById('sheetSel').value;
+  const metricKey = document.getElementById('metricSel').value;
+  return sheetIdx + '|' + metricKey;
+}
+function pointKey(d) { return d.date + '##' + d.batch; }
+
+// 套用時間篩選 + 異常點排除，回傳 {kept, excluded}
+function applySeriesFilter(series) {
+  const exKey = curFilterKey();
+  const exSet = excludedPoints[exKey] || new Set();
+  const from = filterState.from, to = filterState.to;
+  const kept = [], excluded = [];
+  series.forEach(d => {
+    // 時間範圍（date 為 YYYY-MM-DD 字串，可直接字串比較）
+    if(from && d.date < from) { return; }
+    if(to && d.date > to)     { return; }
+    if(exSet.has(pointKey(d))) { excluded.push(d); return; }
+    kept.push(d);
+  });
+  return { kept, excluded };
+}
+
+function onFilterChange() {
+  filterState.from = document.getElementById('filterFrom').value || null;
+  filterState.to   = document.getElementById('filterTo').value   || null;
+  update();
+}
+function clearFilter() {
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value = '';
+  filterState = { from:null, to:null };
+  update();
+}
+function quickRange(days) {
+  // 以資料最新日期為基準往前推
+  const sheetIdx = parseInt(document.getElementById('sheetSel').value);
+  const metricKey = document.getElementById('metricSel').value;
+  const series = getSeriesData(sheetIdx, metricKey);
+  if(!series.length) return;
+  const dates = series.map(x=>x.date).filter(Boolean).sort();
+  const latest = dates[dates.length-1];
+  const d = new Date(latest);
+  d.setDate(d.getDate() - days);
+  const from = d.toISOString().slice(0,10);
+  document.getElementById('filterFrom').value = from;
+  document.getElementById('filterTo').value = latest;
+  filterState = { from, to: latest };
+  update();
+}
+function toggleExcludeMode() {
+  excludeMode = document.getElementById('excludeMode').checked;
+}
+function clearExcluded() {
+  const exKey = curFilterKey();
+  excludedPoints[exKey] = new Set();
+  update();
+}
+// 點擊圖表點時呼叫：切換該點的排除狀態
+function toggleExcludePoint(dataPoint) {
+  const exKey = curFilterKey();
+  if(!excludedPoints[exKey]) excludedPoints[exKey] = new Set();
+  const k = pointKey(dataPoint);
+  if(excludedPoints[exKey].has(k)) excludedPoints[exKey].delete(k);
+  else excludedPoints[exKey].add(k);
+  update();
+}
+function renderExcludedUI(excluded) {
+  const exKey = curFilterKey();
+  const exSet = excludedPoints[exKey] || new Set();
+  const cntEl = document.getElementById('excludedCount');
+  const btnEl = document.getElementById('clearExclBtn');
+  const listEl = document.getElementById('excludedList');
+  if(exSet.size === 0) {
+    cntEl.style.display = 'none';
+    btnEl.style.display = 'none';
+    listEl.style.display = 'none';
+    return;
+  }
+  cntEl.style.display = '';
+  cntEl.textContent = `已排除 ${exSet.size} 點（未納入管制限計算）`;
+  btnEl.style.display = '';
+  listEl.style.display = '';
+  listEl.innerHTML = '<div style="font-size:11px;color:#92400E;display:flex;flex-wrap:wrap;gap:6px;align-items:center">'
+    + '<span style="font-weight:600">排除點：</span>'
+    + excluded.map(d=>`<span style="background:#FEF3C7;border:1px solid #FCD34D;padding:2px 8px;border-radius:10px;cursor:pointer" onclick='toggleExcludePoint(${JSON.stringify(d).replace(/'/g,"&#39;")})' title="點此還原">${d.batch} (${d.date}) ✕</span>`).join('')
+    + '</div>';
+}
+
 function calcSPC(series) {
   const vals = series.map(x=>x.value);
   const n = vals.length;
@@ -2490,8 +2612,16 @@ function update() {
   const sheetIdx = parseInt(document.getElementById('sheetSel').value);
   const metricKey = document.getElementById('metricSel').value;
   const m = METRICS.find(x=>x.key===metricKey);
-  const series = getSeriesData(sheetIdx, metricKey);
-  if(!series.length) return;
+  const rawSeries = getSeriesData(sheetIdx, metricKey);
+  if(!rawSeries.length) return;
+  // ── 套用時間篩選 + 異常點排除 ──
+  const { kept, excluded } = applySeriesFilter(rawSeries);
+  renderExcludedUI(excluded);
+  const series = kept;
+  if(!series.length) {
+    document.getElementById('metricCards').innerHTML = '<div style="padding:20px;color:#94A3B8;font-size:13px">篩選後無資料，請放寬時間範圍或還原排除點。</div>';
+    return;
+  }
   const spc = calcSPC(series);
   const customLim = getLim(sheetIdx, metricKey);
   const useCustom = mode === 'custom';
@@ -2675,6 +2805,21 @@ function update() {
   const mrCanvas = document.getElementById('mrChart');
   xCanvas.getContext('2d').clearRect(0, 0, xCanvas.width, xCanvas.height);
   mrCanvas.getContext('2d').clearRect(0, 0, mrCanvas.width, mrCanvas.height);
+  // ── 排除模式：點擊圖表點即排除/還原該點 ──
+  if(!xCfg.options) xCfg.options = {};
+  const _seriesForClick = series;
+  xCfg.options.onClick = function(evt, elements) {
+    if(!excludeMode) return;
+    if(!elements || !elements.length) return;
+    const idx = elements[0].index;
+    const d = _seriesForClick[idx];
+    if(d) toggleExcludePoint({batch:d.batch, date:d.date});
+  };
+  xCfg.options.onHover = function(evt, elements) {
+    if(excludeMode && evt.native && evt.native.target) {
+      evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+    }
+  };
   xChartInst  = new Chart(xCanvas,  xCfg);
   mrChartInst = new Chart(mrCanvas, mrCfg);
 
