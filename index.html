@@ -2760,6 +2760,7 @@ function update() {
           const i = ctx.dataIndex;
           const v = ctx.parsed.y;
           const lines = [`量測值: ${v.toFixed(3)}`];
+          if(series[i] && series[i].date) lines.push(`檢驗日: ${series[i].date}`);
           const sigma_d = ((v-spc.mean)/spc.sigma).toFixed(2);
           lines.push(`距中心線: ${sigma_d}σ`);
           if(v>activeUCL||v<activeLCL) lines.push('⚠ 超出管制界限');
