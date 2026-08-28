@@ -550,6 +550,7 @@ body{font-family:var(--font-sans)}
     <button class="tab-btn" id="tabBtnOcap" onclick="switchTab('ocap')">🔔 OCAP 設定</button>
     <button class="tab-btn" id="tabBtnCtrl" onclick="switchTab('ctrl')">🧪 對照組統整</button>
     <button class="tab-btn" id="tabBtnProcess" onclick="switchTab('process')">🔗 製程履歷</button>
+    <button class="tab-btn" id="tabBtnCompare" onclick="switchTab('compare')">🔍 前期指標比對</button>
   </div>
 
   <!-- ── Chart Analysis Tab ── -->
@@ -1348,6 +1349,39 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
       </table>
     </div>
   </div><!-- /tabProcess -->
+
+  <!-- ════════════ 前期指標比對分頁 ════════════ -->
+  <div class="tab-page" id="tabCompare">
+    <div class="ph-connect-panel">
+      <div style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:2px">🔍 前期指標 vs 量測值 比對</div>
+      <div style="font-size:11px;color:#64748B;margin-bottom:12px">選擇檢驗項目，再選一個或多個「前期製程參數」（來自 🔗 製程履歷），依 Batch ID 比對兩者趨勢是否同步。</div>
+      <div class="ph-connect-row">
+        <div class="ph-connect-field" style="flex:0 0 140px">
+          <label>料號</label>
+          <select id="cmpSheetSel"></select>
+        </div>
+        <div class="ph-connect-field" style="flex:0 0 160px">
+          <label>量測項目</label>
+          <select id="cmpMetricSel"></select>
+        </div>
+        <div class="ph-connect-field" style="flex:2;min-width:240px">
+          <label>前期指標參數（可多選，Ctrl/⌘ 點選複選）</label>
+          <select id="cmpParamSel" multiple size="4" style="min-height:72px"></select>
+        </div>
+        <div class="ph-connect-field" style="flex:0 0 140px">
+          <label>開始日期</label>
+          <input type="date" id="cmpFrom">
+        </div>
+        <div class="ph-connect-field" style="flex:0 0 140px">
+          <label>結束日期</label>
+          <input type="date" id="cmpTo">
+        </div>
+        <button class="ph-connect-btn" onclick="renderCompare()">產生比對圖</button>
+      </div>
+      <div id="cmpSummary" style="font-size:12px;color:#64748B;margin-top:10px"></div>
+    </div>
+    <div id="cmpCharts"></div>
+  </div><!-- /tabCompare -->
 
 </div><!-- /wrap -->
 
@@ -2182,6 +2216,7 @@ function loadNewData(newRaw, source) {
   buildRuleMetricOptions(0);
   buildWeeklyMetricOptions();
   update();
+  if(typeof populateCompareSelectors === 'function') populateCompareSelectors();
 }
 
 function rebuildSheetSelectors() {
@@ -3054,7 +3089,7 @@ document.getElementById('metricSel').addEventListener('change', ()=>{
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['chart','rules','weekly','import','ocap','ctrl','process'].forEach(t => {
+  ['chart','rules','weekly','import','ocap','ctrl','process','compare'].forEach(t => {
     const btn = document.getElementById('tabBtn'+t.charAt(0).toUpperCase()+t.slice(1));
     const page = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if(btn) btn.classList.toggle('active', t===tab);
@@ -3077,6 +3112,9 @@ function switchTab(tab) {
   if(tab==='process') {
     if(typeof populatePhStationFilter === 'function') populatePhStationFilter();
     if(typeof renderProcessTable === 'function') renderProcessTable();
+  }
+  if(tab==='compare') {
+    if(typeof populateCompareSelectors === 'function') populateCompareSelectors();
   }
 }
 
@@ -4854,6 +4892,7 @@ let PROCESS_SHEET_ID   = '';
 let PROCESS_SHEET_NAME = 'Process History';
 let PROCESS_RAW        = {};   // batchId -> {batch, type, stations:[{station,moveIn,moveOut,durationMin,params}]}
 let PROCESS_ALL_STATIONS = [];
+let PROCESS_PARAM_OPTIONS = []; // [{station, param, key}] — 前期指標比對用的下拉選項
 let processConnected   = false;
 let bcCurrentRec        = null;
 
@@ -4980,6 +5019,22 @@ function buildProcessHistory(rows) {
     out[bid] = { batch:bid, type:rec.type, stations:stations };
   });
   PROCESS_ALL_STATIONS = stationOrderAll;
+
+  // ── 前期指標比對下拉選項：依站點順序收集所有出現過的參數欄名 ──────────
+  const paramSeen = {};
+  const paramOptions = [];
+  stationOrderAll.forEach(function(stName) {
+    Object.keys(out).forEach(function(bid) {
+      const s = out[bid].stations.find(function(x){ return x.station === stName; });
+      if(!s) return;
+      Object.keys(s.params||{}).forEach(function(p) {
+        const key = stName + '::' + p;
+        if(!paramSeen[key]) { paramSeen[key] = true; paramOptions.push({station:stName, param:p, key:key}); }
+      });
+    });
+  });
+  PROCESS_PARAM_OPTIONS = paramOptions;
+
   return out;
 }
 
@@ -5007,6 +5062,7 @@ async function connectProcessSheet() {
     if(badge) badge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22C55E;margin-right:4px"></span>已連接（${batchCount} 批次）`;
     populatePhStationFilter();
     renderProcessTable();
+    if(typeof populateCompareSelectors === 'function') populateCompareSelectors();
   } catch(err) {
     processConnected = false;
     setPhStatus('err', '❌ 連接失敗：' + err.message);
@@ -5216,5 +5272,179 @@ function renderOcapProcessPanel(batchId) {
 document.addEventListener('DOMContentLoaded', function() {
   const idEl = document.getElementById('phSheetId');
   if(idEl && idEl.value.trim()) connectProcessSheet();
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ── 前期指標比對模組 ──────────────────────────────────────────────────────
+   把「前期製程參數」（來自 WBR 製程履歷）依 Batch ID 跟現有 SPC 量測值對齊，
+   畫出雙軸趨勢比對圖 + 相關係數判斷，並附一張只含比對批次的 SPC 管制圖。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+let cmpChartInsts = {};
+let cmpSpcChartInst = null;
+
+function populateCompareSelectors() {
+  const sheetSel = document.getElementById('cmpSheetSel');
+  if(sheetSel) {
+    const cur = sheetSel.value;
+    sheetSel.innerHTML = SHEETS.map(function(s,i){ return `<option value="${i}">${s.replace('出KTC資料-','')}</option>`; }).join('');
+    if(cur !== '' && +cur < SHEETS.length) sheetSel.value = cur;
+  }
+  populateCompareMetricSel();
+  const paramSel = document.getElementById('cmpParamSel');
+  if(paramSel) {
+    const selected = new Set(Array.from(paramSel.selectedOptions||[]).map(function(o){return o.value;}));
+    paramSel.innerHTML = PROCESS_PARAM_OPTIONS.map(function(o){ return `<option value="${o.key}">${o.station}｜${o.param}</option>`; }).join('');
+    Array.from(paramSel.options).forEach(function(o){ if(selected.has(o.value)) o.selected = true; });
+  }
+}
+
+function populateCompareMetricSel() {
+  const metricSel = document.getElementById('cmpMetricSel');
+  if(!metricSel) return;
+  const cur = metricSel.value;
+  metricSel.innerHTML = METRICS.map(function(m){ return `<option value="${m.key}">${m.label}</option>`; }).join('');
+  if(cur && METRICS.some(function(m){return m.key===cur;})) metricSel.value = cur;
+}
+
+function pearsonCorr(a, b) {
+  const n = a.length;
+  if(n < 2) return null;
+  const ma = a.reduce(function(x,y){return x+y;},0) / n;
+  const mb = b.reduce(function(x,y){return x+y;},0) / n;
+  let num = 0, da = 0, db = 0;
+  for(let i=0;i<n;i++) { num += (a[i]-ma)*(b[i]-mb); da += (a[i]-ma)*(a[i]-ma); db += (b[i]-mb)*(b[i]-mb); }
+  if(da === 0 || db === 0) return null;
+  return num / Math.sqrt(da*db);
+}
+
+function renderCompare() {
+  const summaryEl = document.getElementById('cmpSummary');
+  const chartsEl  = document.getElementById('cmpCharts');
+  if(!summaryEl || !chartsEl) return;
+
+  if(!SHEETS.length) { chartsEl.innerHTML = ''; summaryEl.textContent = '尚無 SPC 資料，請先於「📥 資料匯入」分頁匯入資料。'; return; }
+  if(!Object.keys(PROCESS_RAW).length) { chartsEl.innerHTML = ''; summaryEl.textContent = '尚未連接 WBR 製程履歷，請先於「🔗 製程履歷」分頁連接並同步。'; return; }
+
+  const sheetIdx  = parseInt(document.getElementById('cmpSheetSel').value || '0');
+  const metricKey = document.getElementById('cmpMetricSel').value;
+  const paramSel  = document.getElementById('cmpParamSel');
+  const selectedKeys = Array.from(paramSel.selectedOptions || []).map(function(o){ return o.value; });
+  const from = document.getElementById('cmpFrom').value || null;
+  const to   = document.getElementById('cmpTo').value || null;
+
+  if(!selectedKeys.length) { chartsEl.innerHTML = ''; summaryEl.textContent = '請至少選擇一個前期指標參數。'; return; }
+
+  let series = getSeriesData(sheetIdx, metricKey);
+  if(from) series = series.filter(function(d){ return d.date >= from; });
+  if(to)   series = series.filter(function(d){ return d.date <= to; });
+  series = series.slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+
+  const matched = series.map(function(d) {
+    return { batch:d.batch, date:d.date, qcValue:d.value, rec:PROCESS_RAW[d.batch] };
+  }).filter(function(x){ return !!x.rec; });
+
+  const m = METRICS.find(function(x){ return x.key===metricKey; });
+  summaryEl.innerHTML = `共比對到 <b>${matched.length}</b> 筆共同批次（「${m?m.label:metricKey}」量測值 ${series.length} 筆 · 製程履歷共 ${Object.keys(PROCESS_RAW).length} 批次）`;
+
+  if(!matched.length) {
+    chartsEl.innerHTML = '<div class="ph-empty">找不到同時有量測值與製程履歷的批次，請確認兩邊 Batch ID 是否一致，或放寬日期範圍。</div>';
+    return;
+  }
+
+  let html = '';
+  selectedKeys.forEach(function(key, ci) {
+    const parts = key.split('::'), station = parts[0], param = parts[1];
+    html += `<div class="chart-card">
+        <div class="chart-title">「${param}」（${station}） vs 量測值 比對</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="cmpChart${ci}"></canvas></div>
+        <div id="cmpNote${ci}" style="font-size:11px;color:#64748B;margin-top:8px"></div>
+      </div>`;
+  });
+  html += `<div class="chart-card">
+      <div class="chart-title">量測值管制圖（僅含上方共同比對批次）</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="cmpSpcChart"></canvas></div>
+    </div>`;
+  chartsEl.innerHTML = html;
+
+  selectedKeys.forEach(function(key, ci) {
+    const parts = key.split('::'), station = parts[0], param = parts[1];
+    const pts = matched.map(function(mm) {
+      const st = mm.rec.stations.find(function(s){ return s.station===station; });
+      const raw = st && st.params ? st.params[param] : null;
+      const pv = (raw !== null && raw !== undefined && !isNaN(parseFloat(raw))) ? parseFloat(raw) : null;
+      return { batch:mm.batch, date:mm.date, qcValue:mm.qcValue, paramValue:pv };
+    }).filter(function(p){ return p.paramValue !== null; });
+
+    const noteEl = document.getElementById('cmpNote'+ci);
+    const canvas = document.getElementById('cmpChart'+ci);
+    if(!pts.length) {
+      if(noteEl) noteEl.textContent = '此參數在共同比對批次中皆無數值紀錄。';
+      return;
+    }
+    const labels = pts.map(function(p){ return p.batch.length>10 ? p.batch.slice(0,10)+'…' : p.batch; });
+    const indicatorVals = pts.map(function(p){ return p.paramValue; });
+    const qcVals = pts.map(function(p){ return p.qcValue; });
+
+    if(cmpChartInsts[ci]) cmpChartInsts[ci].destroy();
+    cmpChartInsts[ci] = new Chart(canvas, {
+      type:'line',
+      data:{ labels:labels, datasets:[
+        { label:param, data:indicatorVals, borderColor:'#F59E0B', backgroundColor:'#F59E0B', pointBackgroundColor:'#F59E0B', yAxisID:'y1', pointRadius:3, tension:0.15, borderWidth:1.5 },
+        { label:'量測值', data:qcVals, borderColor:'#378ADD', backgroundColor:'#378ADD', pointBackgroundColor:'#378ADD', yAxisID:'y2', pointRadius:3, tension:0.15, borderWidth:1.5 },
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:true, labels:{ font:{size:10}, boxWidth:12 } },
+          tooltip:{ callbacks:{ title:function(ctx){ return pts[ctx[0].dataIndex] ? pts[ctx[0].dataIndex].batch : ''; } } } },
+        scales:{
+          x:{ ticks:{ font:{size:9}, maxRotation:45, autoSkip:true, maxTicksLimit:12 } },
+          y1:{ type:'linear', position:'left', ticks:{ font:{size:9}, color:'#B45309' } },
+          y2:{ type:'linear', position:'right', ticks:{ font:{size:9}, color:'#1D4ED8' }, grid:{ drawOnChartArea:false } }
+        } }
+    });
+
+    const r = pearsonCorr(indicatorVals, qcVals);
+    let verdict;
+    if(r === null || pts.length < 3) verdict = '樣本數不足，暫無法判斷相關性';
+    else if(Math.abs(r) >= 0.6) verdict = (r>0 ? '📈 正向同步' : '📉 反向同步') + `（相關係數 r=${r.toFixed(2)}）— 兩者走勢相關性高`;
+    else if(Math.abs(r) >= 0.3) verdict = `↔ 弱相關（r=${r.toFixed(2)}）— 走勢略有關聯`;
+    else verdict = `⋯ 無明顯關聯（r=${r.toFixed(2)}）`;
+    if(noteEl) noteEl.innerHTML = `共 ${pts.length} 筆同時有數值的批次 · ${verdict}`;
+  });
+
+  const spcVals = matched.map(function(mm){ return mm.qcValue; });
+  const spcLabels = matched.map(function(mm){ return mm.batch.length>12 ? mm.batch.slice(0,12)+'…' : mm.batch; });
+  const spcCanvas = document.getElementById('cmpSpcChart');
+  if(spcVals.length >= 2 && spcCanvas) {
+    const mean = spcVals.reduce(function(a,b){return a+b;},0) / spcVals.length;
+    const mrs = [];
+    for(let i=1;i<spcVals.length;i++) mrs.push(Math.abs(spcVals[i]-spcVals[i-1]));
+    const mrBar = mrs.length ? mrs.reduce(function(a,b){return a+b;},0)/mrs.length : 0;
+    const sigma = mrBar / 1.128;
+    const UCL = mean + 3*sigma, LCL = mean - 3*sigma;
+    const ptColors = spcVals.map(function(v){ return (v>UCL||v<LCL) ? '#E24B4A' : '#378ADD'; });
+    if(cmpSpcChartInst) cmpSpcChartInst.destroy();
+    cmpSpcChartInst = new Chart(spcCanvas, {
+      type:'line',
+      data:{ labels:spcLabels, datasets:[
+        { label:'量測值', data:spcVals, borderColor:'#378ADD', pointBackgroundColor:ptColors, pointRadius:4, tension:0.1, borderWidth:1.5 },
+        { label:'UCL', data:Array(spcVals.length).fill(UCL), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0 },
+        { label:'CL', data:Array(spcVals.length).fill(mean), borderColor:'#888780', borderDash:[4,3], borderWidth:1, pointRadius:0 },
+        { label:'LCL', data:Array(spcVals.length).fill(LCL), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0 },
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false },
+          tooltip:{ callbacks:{ title:function(ctx){ return matched[ctx[0].dataIndex] ? matched[ctx[0].dataIndex].batch : ''; } } } },
+        scales:{ x:{ ticks:{ font:{size:9}, maxRotation:45, autoSkip:true, maxTicksLimit:12 } }, y:{ ticks:{ font:{size:10} } } } }
+    });
+  } else if(spcCanvas) {
+    if(cmpSpcChartInst) { cmpSpcChartInst.destroy(); cmpSpcChartInst = null; }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const cmpSheetSel = document.getElementById('cmpSheetSel');
+  if(cmpSheetSel) cmpSheetSel.addEventListener('change', populateCompareMetricSel);
+  populateCompareSelectors();
 });
 </script>
