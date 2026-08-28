@@ -372,6 +372,83 @@ body{font-family:var(--font-sans)}
 .pv-table tbody td{color:#334155}
 .pv-table tbody td.pv-empty-cell{color:#CBD5E1}
 
+/* ══════════════════════════════════════════════
+   OCAP參數確認 分頁
+══════════════════════════════════════════════ */
+.oc-search-panel{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.oc-search-panel label{font-size:12px;color:#64748B;font-weight:500}
+.oc-search-panel select{height:34px;padding:0 10px;font-size:13px;border-radius:6px;border:1px solid #CBD5E1;background:#fff;min-width:200px}
+.oc-batch-meta{font-size:12px;color:#64748B;margin-left:auto}
+
+.oc-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.oc-summary-card{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;text-align:center}
+.oc-summary-card .lbl{font-size:11px;color:#64748B;margin-bottom:4px}
+.oc-summary-card .val{font-size:18px;font-weight:600}
+
+.oc-lock-banner{display:flex;align-items:center;gap:8px;background:#F1F5F9;border:1px dashed #CBD5E1;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#64748B;margin-bottom:14px}
+
+.oc-flow-track{position:relative;padding-left:22px;margin-bottom:8px}
+.oc-flow-track::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:#E2E8F0}
+
+.oc-step-card{position:relative;background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.oc-step-card::before{content:'';position:absolute;left:-22px;top:20px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid #2563EB}
+.oc-step-card.pass::before{border-color:#16A34A}
+.oc-step-card.fail::before{border-color:#DC2626}
+.oc-step-card.info::before{border-color:#94A3B8}
+.oc-step-card.manual::before{border-color:#7C3AED}
+.oc-step-card.dimmed{opacity:.35;pointer-events:none;filter:grayscale(60%)}
+
+.oc-step-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.oc-step-title-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.oc-step-num{font-size:11px;font-weight:700;color:#fff;background:#2563EB;border-radius:5px;padding:2px 7px}
+.oc-step-num.manual{background:#7C3AED}
+.oc-step-title{font-size:13.5px;font-weight:600;color:#1E293B}
+.oc-step-station{font-size:11px;color:#64748B;background:#F1F5F9;padding:2px 8px;border-radius:10px}
+
+.oc-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:6px;white-space:nowrap}
+.oc-badge.green{background:#DCFCE7;color:#15803D}
+.oc-badge.red{background:#FEE2E2;color:#B91C1C}
+.oc-badge.gray{background:#F1F5F9;color:#64748B}
+.oc-badge.amber{background:#FEF3C7;color:#92600B}
+
+.oc-step-body{display:flex;gap:24px;flex-wrap:wrap;font-size:12.5px}
+.oc-spec-block{color:#64748B;min-width:220px}
+.oc-spec-block .k{color:#94A3B8;font-size:11px;margin-bottom:3px}
+.oc-spec-block .v{color:#1E293B}
+
+.oc-measure-table{border-collapse:collapse;font-size:12.5px}
+.oc-measure-table th{text-align:left;color:#94A3B8;font-weight:500;font-size:11px;padding:2px 14px 4px 0}
+.oc-measure-table td{padding:2px 14px 2px 0;color:#1E293B}
+.oc-measure-table td.ok{color:#15803D;font-weight:600}
+.oc-measure-table td.bad{color:#B91C1C;font-weight:600}
+.oc-measure-table td.na{color:#94A3B8}
+
+.oc-note-line{font-size:11.5px;color:#94A3B8;margin-top:8px;line-height:1.6}
+.oc-note-line b{color:#64748B}
+.oc-fail-note{margin-top:10px;font-size:12px;background:#FEE2E2;color:#B91C1C;border-radius:6px;padding:8px 12px}
+.oc-resolved-note{margin-top:10px;font-size:12px;background:#DCFCE7;color:#15803D;border-radius:6px;padding:8px 12px}
+.oc-close-note{margin-top:10px;font-size:12px;background:#FEE2E2;color:#B91C1C;border-radius:6px;padding:8px 12px}
+
+.oc-manual-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.oc-manual-field{display:flex;flex-direction:column;gap:4px}
+.oc-manual-field .k{font-size:11px;color:#94A3B8}
+.oc-manual-field input[type=text]{height:30px;padding:0 8px;font-size:12.5px;border-radius:6px;border:1px solid #CBD5E1;min-width:150px}
+.oc-yn-toggle{display:inline-flex;border-radius:6px;overflow:hidden;border:1px solid #CBD5E1}
+.oc-yn-toggle button{border:none;background:#fff;color:#64748B;font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer}
+.oc-yn-toggle button.on.yes{background:#16A34A;color:#fff}
+.oc-yn-toggle button.on.no{background:#DC2626;color:#fff}
+.oc-yn-toggle button+button{border-left:1px solid #CBD5E1}
+.oc-pending-badge{font-size:11px;color:#94A3B8;font-style:italic}
+.oc-check-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#1E293B}
+.oc-check-row input{width:14px;height:14px}
+.oc-status-select{height:30px;padding:0 8px;font-size:12.5px;border-radius:6px;border:1px solid #CBD5E1}
+
+.oc-final-note{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:16px 18px;margin-top:8px}
+.oc-final-note .k{font-size:13px;font-weight:600;color:#1E293B;margin-bottom:8px}
+.oc-final-note textarea{width:100%;min-height:80px;border:1px solid #CBD5E1;border-radius:8px;padding:10px 12px;font-size:12.5px;font-family:inherit;resize:vertical;box-sizing:border-box}
+.oc-final-note .save-btn{margin-top:10px;height:34px;padding:0 18px;font-size:12.5px;font-weight:700;border-radius:6px;border:none;background:#2563EB;color:#fff;cursor:pointer}
+.oc-final-note .save-hint{font-size:11px;color:#94A3B8;margin-top:6px}
+
 .ph-param-list{max-height:110px;overflow-y:auto;overflow-x:hidden;border:1px solid #CBD5E1;border-radius:6px;background:#fff;padding:4px 2px}
 .ph-param-row{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:4px 8px;font-size:12px;color:#1E293B;border-radius:4px}
 .ph-param-row:hover{background:#F1F5F9}
@@ -517,6 +594,7 @@ body{font-family:var(--font-sans)}
     <button class="tab-btn" id="tabBtnOcap" onclick="switchTab('ocap')">🔔 OCAP 設定</button>
     <button class="tab-btn" id="tabBtnCtrl" onclick="switchTab('ctrl')">🧪 對照組統整</button>
     <button class="tab-btn" id="tabBtnProcess" onclick="switchTab('process')">🔗 製程履歷</button>
+    <button class="tab-btn" id="tabBtnOcapConfirm" onclick="switchTab('ocapConfirm')">✅ OCAP參數確認</button>
     <button class="tab-btn" id="tabBtnCompare" onclick="switchTab('compare')">🔍 前期指標比對</button>
   </div>
 
@@ -1266,6 +1344,22 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
 
     <div class="pv-scroll" id="phPivotWrap"></div>
   </div><!-- /tabProcess -->
+
+  <!-- ════════════ OCAP參數確認分頁 ════════════ -->
+  <div class="tab-page" id="tabOcapConfirm">
+    <div class="ph-connect-panel">
+      <div style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:2px">✅ OCAP參數確認 — 依 SOP 流程逐站核對</div>
+      <div style="font-size:11px;color:#64748B;line-height:1.6">依照「WBR Film OCAP 流程圖（Fine 10 / FQC）」Step 1～10：Step 3／4／6／7／8 從 🔗製程履歷資料自動帶入各站參數與站間靜置時間，依規格自動判定合格／不合格；Step 5（曝光）僅顯示實測值，Pattern／波長需工程師人工核對機台 Log；Step 1／2／9／10 為人工填寫確認。</div>
+    </div>
+
+    <div class="oc-search-panel">
+      <label>選擇 Batch ID</label>
+      <select id="ocBatchSel" onchange="ocOnBatchChange()"><option value="">請選擇 Batch ID…</option></select>
+      <span class="oc-batch-meta" id="ocBatchMeta"></span>
+    </div>
+
+    <div id="ocConfirmBody"></div>
+  </div><!-- /tabOcapConfirm -->
 
   <!-- ════════════ 前期指標比對分頁 ════════════ -->
   <div class="tab-page" id="tabCompare">
@@ -3025,7 +3119,7 @@ document.getElementById('metricSel').addEventListener('change', ()=>{
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['chart','rules','weekly','import','ocap','ctrl','process','compare'].forEach(t => {
+  ['chart','rules','weekly','import','ocap','ctrl','process','ocapConfirm','compare'].forEach(t => {
     const btn = document.getElementById('tabBtn'+t.charAt(0).toUpperCase()+t.slice(1));
     const page = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if(btn) btn.classList.toggle('active', t===tab);
@@ -3048,6 +3142,10 @@ function switchTab(tab) {
   if(tab==='process') {
     if(typeof populatePhStationFilter === 'function') populatePhStationFilter();
     if(typeof renderProcessTable === 'function') renderProcessTable();
+  }
+  if(tab==='ocapConfirm') {
+    if(typeof populateOcapConfirmBatchSel === 'function') populateOcapConfirmBatchSel();
+    if(typeof renderOcapConfirmPage === 'function') renderOcapConfirmPage();
   }
   if(tab==='compare') {
     if(typeof populateCompareSelectors === 'function') populateCompareSelectors();
@@ -5348,4 +5446,462 @@ document.addEventListener('DOMContentLoaded', function() {
   if(cmpSheetSel) cmpSheetSel.addEventListener('change', populateCompareMetricSel);
   populateCompareSelectors();
 });
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ── OCAP參數確認 分頁 ────────────────────────────────────────────────────
+   依「WBR Film OCAP 流程圖（Fine 10 / FQC）」Step 1～10：
+     Step 3／4／6／7／8 → 從 PROCESS_RAW（🔗製程履歷）自動帶入各站參數／
+                            站間靜置時間，依下方規格門檻自動判定合格／不合格
+     Step 5（曝光）      → 只顯示曝光能量實測值，不自動判定，留給工程師依
+                            機台 Log 人工核對 Pattern／波長是否正確
+     Step 1／2／9／10    → 人工填寫確認（姓名／Yes-No／狀態），存在瀏覽器
+                            本機（localStorage），僅供這台電腦這個瀏覽器參考
+   ══════════════════════════════════════════════════════════════════════════ */
+
+// ── 規格門檻（Fine 10 / FQC 版本）──────────────────────────────────────────
+// tol 為容許誤差範圍：流程圖只有顯影溫度標了 ±0.2℃，其餘數字沒有標註容許範圍，
+// 這裡先給一個保守的合理容許值，避免量測正常的些微波動被誤判為不合格。
+// 如果實際 SOP 有明確容許範圍、或不同料號規格不同，把下面數字改掉即可，判定邏輯不用動。
+const OCAP_STATION_SPECS = {
+  '顯影': [
+    { param:'顯影溫度(℃)', target:30, tol:0.2 },
+    { param:'顯影壓力(Kg/cm²)', target:2, tol:0.2 },
+  ],
+  '壓膜': [
+    { param:'壓膜上滾輪溫度(℃)', target:80, tol:3 },
+    { param:'壓膜下滾輪溫度(℃)', target:80, tol:3 },
+    { param:'壓膜壓力(Kg/cm²)', target:5, tol:0.3 },
+    { param:'壓膜速度(mpm)', target:0.25, tol:0.03 },
+  ],
+  '銅板烘烤': [
+    { param:'銅板烘烤溫度(℃)', target:100, tol:3 },
+    { param:'銅板烘烤時間(sec)', target:130, tol:10 },
+  ],
+};
+// 有記錄但流程圖沒給固定數值目標的參數：只顯示實測值，不判定
+const OCAP_DISPLAY_ONLY_PARAMS = {
+  '顯影': ['顯影速度(M/min)'],
+};
+const OCAP_REST_TIME_HR = 1; // Step4、Step6 靜置時間下限（小時）
+
+const OCAP_AUTO_STEPS = [
+  { num:3, title:'確認顯影機參數條件設定', type:'station', station:'顯影',
+    specText:'溫度 30 ± 0.2℃／壓力 2 kg/cm²／速度：正確即可（無固定數值）' },
+  { num:4, title:'確認曝光至顯影靜置時間', type:'rest', from:'曝光', to:'顯影',
+    specText:`靜置時間 ≥ ${OCAP_REST_TIME_HR} 小時` },
+  { num:5, title:'確認曝光參數條件設定', type:'display', station:'曝光',
+    specText:'Dose 200 / 312 mJ・波長 405nm・Pattern/能量選取需核對機台 Log',
+    displayParams:['曝光能量_Left (mj)','曝光能量_Right (mj)'] },
+  { num:6, title:'確認壓膜至曝光靜置時間', type:'rest', from:'壓膜', to:'曝光',
+    specText:`靜置時間 ≥ ${OCAP_REST_TIME_HR} 小時` },
+  { num:7, title:'確認壓膜機參數條件設定', type:'station', station:'壓膜',
+    specText:'溫度 80℃／壓力 5 kg/cm²／速度 0.25 mpm' },
+  { num:8, title:'確認烘箱參數條件設定', type:'station', station:'銅板烘烤',
+    specText:'溫度 100℃／時間 130 sec' },
+];
+
+// ── 人工確認欄位（Step 1／2／9／10）：僅存瀏覽器本機 localStorage ──────────
+const OCAP_MANUAL_STATE_KEY = 'wbr_ocapManualConfirm'; // { batchId: draft }
+let OCAP_CONFIRM_DRAFT = null; // 目前選取批次的草稿（含尚未按「儲存確認」的輸入）
+
+function ocDefaultDraft() {
+  return {
+    s1:  { name:'', yn:null },
+    s2:  { name:'', yn:null, ktc:false },
+    s9:  { name:'', yn:null },
+    s10: { name:'', status:'等待 KTC 調查結果', ktc:false, sample:false },
+    note:'',
+    savedAt:null,
+  };
+}
+function ocLoadAllManualState() {
+  try { return JSON.parse(localStorage.getItem(OCAP_MANUAL_STATE_KEY) || '{}'); } catch(e) { return {}; }
+}
+function ocSaveAllManualState(all) {
+  try { localStorage.setItem(OCAP_MANUAL_STATE_KEY, JSON.stringify(all)); } catch(e) {}
+}
+function ocLoadDraft(batch) {
+  const all = ocLoadAllManualState();
+  const def = ocDefaultDraft();
+  if(!all[batch]) return def;
+  // 淺層合併，避免舊資料缺欄位時整組壞掉
+  return {
+    s1: Object.assign(def.s1, all[batch].s1),
+    s2: Object.assign(def.s2, all[batch].s2),
+    s9: Object.assign(def.s9, all[batch].s9),
+    s10: Object.assign(def.s10, all[batch].s10),
+    note: all[batch].note || '',
+    savedAt: all[batch].savedAt || null,
+  };
+}
+
+// ── 批次選單 ────────────────────────────────────────────────────────────
+function populateOcapConfirmBatchSel() {
+  const sel = document.getElementById('ocBatchSel');
+  if(!sel) return;
+  const cur = sel.value;
+  const batches = Object.keys(PROCESS_RAW).sort(function(a,b) {
+    return (lastStationTime(PROCESS_RAW[b])||'').localeCompare(lastStationTime(PROCESS_RAW[a])||'');
+  });
+  sel.innerHTML = '<option value="">請選擇 Batch ID…</option>' +
+    batches.map(function(b){ return `<option value="${b}">${b}</option>`; }).join('');
+  if(batches.indexOf(cur) !== -1) sel.value = cur;
+}
+
+function ocOnBatchChange() {
+  const sel = document.getElementById('ocBatchSel');
+  const batch = sel ? sel.value : '';
+  OCAP_CONFIRM_DRAFT = batch ? ocLoadDraft(batch) : null;
+  renderOcapConfirmPage();
+}
+
+// ── 資料存取／判定邏輯 ─────────────────────────────────────────────────────
+function ocGetStation(batch, stationName) {
+  const rec = PROCESS_RAW[batch];
+  if(!rec) return null;
+  return rec.stations.find(function(s){ return s.station === stationName; }) || null;
+}
+
+function ocEvalStationSpec(batch, stationName) {
+  const st = ocGetStation(batch, stationName);
+  const specs = OCAP_STATION_SPECS[stationName] || [];
+  const displayParams = OCAP_DISPLAY_ONLY_PARAMS[stationName] || [];
+  const items = specs.map(function(sp) {
+    const raw = st && st.params ? st.params[sp.param] : undefined;
+    const v = (raw !== undefined && raw !== null && String(raw).trim() !== '' && !isNaN(parseFloat(raw))) ? parseFloat(raw) : null;
+    const pass = v === null ? null : Math.abs(v - sp.target) <= sp.tol;
+    return { param:sp.param, value:v, pass:pass, target:sp.target, tol:sp.tol };
+  });
+  const displayItems = displayParams.map(function(p) {
+    const raw = st && st.params ? st.params[p] : undefined;
+    return { param:p, value:(raw !== undefined && raw !== null && String(raw).trim() !== '') ? raw : null };
+  });
+  let verdict;
+  if(!st) verdict = 'nodata';
+  else {
+    const withValue = items.filter(function(it){ return it.value !== null; });
+    if(!withValue.length) verdict = 'nodata';
+    else if(withValue.some(function(it){ return it.pass === false; })) verdict = 'fail';
+    else if(withValue.length < items.length) verdict = 'partial';
+    else verdict = 'pass';
+  }
+  return { hasStation: !!st, items:items, displayItems:displayItems, verdict:verdict };
+}
+
+function ocEvalRestTime(batch, stationFrom, stationTo) {
+  const stA = ocGetStation(batch, stationFrom);
+  const stB = ocGetStation(batch, stationTo);
+  const tA = stA && stA.moveOut ? parseFlexDate(stA.moveOut.time) : null;
+  const tB = stB && stB.moveIn ? parseFlexDate(stB.moveIn.time) : null;
+  if(!tA || !tB) return { hasData:false, verdict:'nodata' };
+  const minutes = Math.round((tB - tA) / 60000);
+  if(minutes < 0) return { hasData:false, verdict:'nodata' }; // 時間順序異常，視為無有效資料
+  const hours = minutes / 60;
+  const pass = hours >= OCAP_REST_TIME_HR;
+  return { hasData:true, minutes:minutes, hours:hours, fromTime:stA.moveOut.time, toTime:stB.moveIn.time, verdict: pass ? 'pass' : 'fail' };
+}
+
+// ── 小元件 ──────────────────────────────────────────────────────────────
+// HTML 屬性／內容安全跳脫（姓名、備註是使用者自由輸入，跟站別/參數名稱這種系統產生的字串不同，
+// 必須完整跳脫 & < > " '，避免打進 " 或 < 之類字元時把畫面弄壞）
+function ocEscHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function ocBadgeHtml(verdict) {
+  if(verdict === 'pass') return '<span class="oc-badge green">✓ 符合規格</span>';
+  if(verdict === 'fail') return '<span class="oc-badge red">✕ 不符合規格</span>';
+  if(verdict === 'partial') return '<span class="oc-badge amber">△ 部分資料缺失</span>';
+  return '<span class="oc-badge gray">— 無資料</span>';
+}
+function ocCardClass(verdict) {
+  return verdict === 'pass' ? 'pass' : verdict === 'fail' ? 'fail' : 'info';
+}
+function ocFmtVal(v) {
+  return (v === null || v === undefined) ? '<span style="color:#CBD5E1">—</span>' : v;
+}
+
+// ── 各步驟卡片 HTML ────────────────────────────────────────────────────────
+function ocRenderStationCard(step, batch) {
+  const ev = ocEvalStationSpec(batch, step.station);
+  const rows = ev.items.map(function(it) {
+    const cellClass = it.pass === true ? 'ok' : it.pass === false ? 'bad' : 'na';
+    const cellText = it.pass === true ? '✓ 符合' : it.pass === false ? '✕ 超出規格' : '— 無資料';
+    return `<tr><td>${it.param}</td><td>${ocFmtVal(it.value)}</td><td class="${cellClass}">${cellText}</td></tr>`;
+  }).join('') + ev.displayItems.map(function(it) {
+    return `<tr><td>${it.param}</td><td>${ocFmtVal(it.value)}</td><td class="na">— 僅顯示</td></tr>`;
+  }).join('');
+  const failList = ev.items.filter(function(it){ return it.pass === false; })
+    .map(function(it){ return `${it.param}（實測 ${it.value}，規格 ${it.target}±${it.tol}）`; }).join('、');
+  return `<div class="oc-step-card ${ocCardClass(ev.verdict)}">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num">Step ${step.num}</span>
+        <span class="oc-step-title">${step.title}</span>
+        <span class="oc-step-station">${step.station}站</span>
+      </div>
+      ${ocBadgeHtml(ev.verdict)}
+    </div>
+    <div class="oc-step-body">
+      <div class="oc-spec-block"><div class="k">SOP 規格</div><div class="v">${step.specText}</div></div>
+      <table class="oc-measure-table"><thead><tr><th>參數</th><th>實測值</th><th>判定</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    ${ev.verdict==='fail' ? `<div class="oc-fail-note">⚠ ${failList} 超出規格，依 SOP 流程建議：重新取樣進行複驗。</div>` : ''}
+    ${!ev.hasStation ? `<div class="oc-note-line">※ 此批次目前製程履歷中沒有「${step.station}」站的紀錄。</div>` : ''}
+  </div>`;
+}
+
+function ocRenderDisplayCard(step, batch) {
+  const ev = ocEvalStationSpec(batch, step.station);
+  const rows = ev.displayItems.map(function(it) {
+    return `<tr><td>${it.param}</td><td>${ocFmtVal(it.value)}</td></tr>`;
+  }).join('');
+  return `<div class="oc-step-card info">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num">Step ${step.num}</span>
+        <span class="oc-step-title">${step.title}</span>
+        <span class="oc-step-station">${step.station}站</span>
+      </div>
+      <span class="oc-badge gray">— 僅供參考，需人工核對</span>
+    </div>
+    <div class="oc-step-body">
+      <div class="oc-spec-block"><div class="k">SOP 規格</div><div class="v">${step.specText}</div></div>
+      <table class="oc-measure-table"><thead><tr><th>參數</th><th>實測值</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="oc-note-line">⚠ <b>Pattern 選取正確性與波長未記錄於製程履歷</b>，僅列出能量數值供對照，仍需工程師人工核對機台 Log 後自行判斷是否符合。</div>
+  </div>`;
+}
+
+function ocRenderRestCard(step, batch) {
+  const ev = ocEvalRestTime(batch, step.from, step.to);
+  const body = ev.hasData
+    ? `<table class="oc-measure-table"><thead><tr><th>${step.from} Move out</th><th>${step.to} Move in</th><th>實際靜置</th><th>判定</th></tr></thead>
+        <tbody><tr><td>${fmtTimeShort(ev.fromTime)}</td><td>${fmtTimeShort(ev.toTime)}</td><td>${Math.floor(ev.hours)} hr ${ev.minutes % 60} min</td>
+        <td class="${ev.verdict==='pass'?'ok':'bad'}">${ev.verdict==='pass'?'✓ 符合':'✕ 未達規定'}</td></tr></tbody></table>`
+    : `<div class="oc-note-line">※ 缺少「${step.from}」Move out 或「${step.to}」Move in 時間，無法計算靜置時間。</div>`;
+  return `<div class="oc-step-card ${ocCardClass(ev.verdict)}">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num">Step ${step.num}</span>
+        <span class="oc-step-title">${step.title}</span>
+        <span class="oc-step-station">${step.from} → ${step.to}</span>
+      </div>
+      ${ocBadgeHtml(ev.verdict)}
+    </div>
+    <div class="oc-step-body">
+      <div class="oc-spec-block"><div class="k">SOP 規格</div><div class="v">${step.specText}</div></div>
+      ${body}
+    </div>
+    ${ev.hasData && ev.verdict==='fail' ? `<div class="oc-fail-note">⚠ 靜置時間僅 ${Math.floor(ev.hours)} hr ${ev.minutes % 60} min，未滿 ${OCAP_REST_TIME_HR} 小時，依 SOP 流程建議：重新取樣進行複驗。</div>` : ''}
+  </div>`;
+}
+
+// ── 人工確認卡片（Step 1／2／9／10）────────────────────────────────────────
+function ocRenderManualStep1(d) {
+  const yn = d.s1.yn;
+  return `<div class="oc-step-card manual">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num manual">Step 1</span>
+        <span class="oc-step-title">由另一位檢驗員覆判</span>
+        <span class="oc-step-station">第二位檢驗員</span>
+      </div>
+      <span class="oc-pending-badge">${yn ? '已確認' : '尚未確認'}</span>
+    </div>
+    <div class="oc-manual-row">
+      <div class="oc-manual-field"><div class="k">覆判人員</div>
+        <input type="text" value="${ocEscHtml(d.s1.name)}" placeholder="輸入姓名" oninput="ocSetField('s1.name', this.value)"></div>
+      <div class="oc-manual-field"><div class="k">缺陷型態確認？</div>
+        <div class="oc-yn-toggle">
+          <button type="button" class="yes ${yn==='yes'?'on':''}" onclick="ocSetYn('s1','yes')">Yes 確認</button>
+          <button type="button" class="no ${yn==='no'?'on':''}" onclick="ocSetYn('s1','no')">No 否</button>
+        </div>
+      </div>
+    </div>
+    ${yn==='no' ? `<div class="oc-close-note">✕ 缺陷型態無法確認 → 記錄並關閉案件。</div>` : ''}
+  </div>`;
+}
+
+function ocRenderManualStep2(d) {
+  const yn = d.s2.yn;
+  return `<div class="oc-step-card manual">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num manual">Step 2</span>
+        <span class="oc-step-title">OOC/OOS 請工程師覆判</span>
+        <span class="oc-step-station">品管工程師</span>
+      </div>
+      <span class="oc-pending-badge">${yn ? '已確認' : '尚未確認'}</span>
+    </div>
+    <div class="oc-manual-row">
+      <div class="oc-manual-field"><div class="k">覆判工程師</div>
+        <input type="text" value="${ocEscHtml(d.s2.name)}" placeholder="輸入姓名" oninput="ocSetField('s2.name', this.value)"></div>
+      <div class="oc-manual-field"><div class="k">確認異常存在？</div>
+        <div class="oc-yn-toggle">
+          <button type="button" class="yes ${yn==='yes'?'on':''}" onclick="ocSetYn('s2','yes')">Yes 確認</button>
+          <button type="button" class="no ${yn==='no'?'on':''}" onclick="ocSetYn('s2','no')">No 否</button>
+        </div>
+      </div>
+      ${yn==='yes' ? `<div class="oc-check-row"><input type="checkbox" id="ocS2Ktc" ${d.s2.ktc?'checked':''} onchange="ocSetField('s2.ktc', this.checked)"><label for="ocS2Ktc">同時已通知 KTC</label></div>` : ''}
+    </div>
+    ${yn==='no' ? `<div class="oc-close-note">✕ 異常不存在 → 記錄並關閉案件。</div>` : ''}
+  </div>`;
+}
+
+function ocRenderManualStep9(d) {
+  const yn = d.s9.yn;
+  return `<div class="oc-step-card manual">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num manual">Step 9</span>
+        <span class="oc-step-title">重新取樣進行複驗</span>
+        <span class="oc-step-station">檢驗員 + 品管工程師（依 AQL）</span>
+      </div>
+      <span class="oc-pending-badge">${yn ? '已確認' : '尚未確認'}</span>
+    </div>
+    <div class="oc-manual-row">
+      <div class="oc-manual-field"><div class="k">複驗人員</div>
+        <input type="text" value="${ocEscHtml(d.s9.name)}" placeholder="輸入姓名" oninput="ocSetField('s9.name', this.value)"></div>
+      <div class="oc-manual-field"><div class="k">複驗結果仍異常？</div>
+        <div class="oc-yn-toggle">
+          <button type="button" class="yes ${yn==='yes'?'on':''}" onclick="ocSetYn('s9','yes')">Yes 仍異常</button>
+          <button type="button" class="no ${yn==='no'?'on':''}" onclick="ocSetYn('s9','no')">No 已正常</button>
+        </div>
+      </div>
+    </div>
+    ${yn==='no' ? `<div class="oc-resolved-note">✓ 複驗結果正常 → 問題解決，記錄並關閉案件。</div>` : ''}
+  </div>`;
+}
+
+function ocRenderManualStep10(d, dimmed) {
+  return `<div class="oc-step-card manual${dimmed?' dimmed':''}" style="border-color:#DDD6FE">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num manual">Step 10</span>
+        <span class="oc-step-title">通知 KTC 調查</span>
+        <span class="oc-step-station">品管課長</span>
+      </div>
+      <span class="oc-pending-badge">${d.s10.name ? '已確認' : '尚未確認'}</span>
+    </div>
+    <div class="oc-manual-row">
+      <div class="oc-manual-field"><div class="k">確認人（品管課長）</div>
+        <input type="text" value="${ocEscHtml(d.s10.name)}" placeholder="輸入姓名" oninput="ocSetField('s10.name', this.value)"></div>
+      <div class="oc-manual-field"><div class="k">案件狀態</div>
+        <select class="oc-status-select" onchange="ocSetField('s10.status', this.value)">
+          ${['等待 KTC 調查結果','KTC 已回覆・結案','KTC 已回覆・需 Follow up'].map(function(opt) {
+            return `<option ${d.s10.status===opt?'selected':''}>${opt}</option>`;
+          }).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="oc-manual-row" style="margin-top:2px">
+      <div class="oc-check-row"><input type="checkbox" id="ocS10Ktc" ${d.s10.ktc?'checked':''} onchange="ocSetField('s10.ktc', this.checked)"><label for="ocS10Ktc">已升級通報 KTC</label></div>
+      <div class="oc-check-row"><input type="checkbox" id="ocS10Sample" ${d.s10.sample?'checked':''} onchange="ocSetField('s10.sample', this.checked)"><label for="ocS10Sample">已保留異常樣品</label></div>
+    </div>
+  </div>`;
+}
+
+// ── 欄位更新（不觸發整頁重繪，避免輸入框失焦）───────────────────────────────
+function ocSetField(path, value) {
+  if(!OCAP_CONFIRM_DRAFT) return;
+  const parts = path.split('.');
+  let obj = OCAP_CONFIRM_DRAFT;
+  for(let i=0;i<parts.length-1;i++) obj = obj[parts[i]];
+  obj[parts[parts.length-1]] = value;
+}
+// Yes/No 切換：會影響鎖定狀態與提示文字，需要重繪
+function ocSetYn(stepKey, val) {
+  if(!OCAP_CONFIRM_DRAFT) return;
+  OCAP_CONFIRM_DRAFT[stepKey].yn = OCAP_CONFIRM_DRAFT[stepKey].yn === val ? null : val; // 再點一次可取消
+  renderOcapConfirmPage();
+}
+
+function ocSaveConfirm() {
+  const sel = document.getElementById('ocBatchSel');
+  const batch = sel ? sel.value : '';
+  if(!batch || !OCAP_CONFIRM_DRAFT) return;
+  const noteEl = document.getElementById('ocFinalNote');
+  if(noteEl) OCAP_CONFIRM_DRAFT.note = noteEl.value;
+  OCAP_CONFIRM_DRAFT.savedAt = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+  const all = ocLoadAllManualState();
+  all[batch] = OCAP_CONFIRM_DRAFT;
+  ocSaveAllManualState(all);
+  renderOcapConfirmPage();
+}
+
+// ── 整頁組裝 ────────────────────────────────────────────────────────────
+function renderOcapConfirmPage() {
+  const body = document.getElementById('ocConfirmBody');
+  const metaEl = document.getElementById('ocBatchMeta');
+  if(!body) return;
+
+  const sel = document.getElementById('ocBatchSel');
+  const batch = sel ? sel.value : '';
+
+  if(!batch || !PROCESS_RAW[batch]) {
+    if(metaEl) metaEl.textContent = '';
+    body.innerHTML = `<div class="ph-empty">${Object.keys(PROCESS_RAW).length ? '請先在上方選擇要核對的 Batch ID' : '尚未連接 WBR 製程履歷，請先於「🔗 製程履歷」分頁連接並同步'}</div>`;
+    return;
+  }
+
+  const rec = PROCESS_RAW[batch];
+  if(metaEl) metaEl.textContent = `料號 ${rec.type || '—'} ・ 製程履歷共 ${rec.stations.length} 站紀錄`;
+
+  const d = OCAP_CONFIRM_DRAFT || (OCAP_CONFIRM_DRAFT = ocLoadDraft(batch));
+
+  // ── 各自動步驟判定，統計摘要 ──
+  const autoEvals = OCAP_AUTO_STEPS.map(function(step) {
+    if(step.type === 'station') return { step:step, verdict: ocEvalStationSpec(batch, step.station).verdict };
+    if(step.type === 'rest')    return { step:step, verdict: ocEvalRestTime(batch, step.from, step.to).verdict };
+    return { step:step, verdict:'display' };
+  });
+  const judged = autoEvals.filter(function(e){ return e.step.type !== 'display'; });
+  const passCount = judged.filter(function(e){ return e.verdict==='pass'; }).length;
+  const failCount = judged.filter(function(e){ return e.verdict==='fail'; }).length;
+  const refCount = autoEvals.length - judged.length;
+
+  // ── Step1/Step2 選 No → 鎖住後面所有步驟；Step9 選 No → 鎖住 Step10 ──
+  const closedStep = d.s1.yn === 'no' ? 1 : (d.s2.yn === 'no' ? 2 : null);
+  const lockBanner = closedStep
+    ? `<div class="oc-lock-banner">🔒 案件已於 Step ${closedStep} 記錄並關閉，以下步驟不再需要填寫。</div>`
+    : '';
+
+  const stepsHtml = OCAP_AUTO_STEPS.map(function(step) {
+    if(step.type === 'station') return ocRenderStationCard(step, batch);
+    if(step.type === 'rest')    return ocRenderRestCard(step, batch);
+    return ocRenderDisplayCard(step, batch);
+  }).join('');
+
+  const step10Dimmed = d.s9.yn === 'no';
+
+  body.innerHTML = `
+    <div class="oc-summary-row">
+      <div class="oc-summary-card"><div class="lbl">共比對項目</div><div class="val">${judged.length}</div></div>
+      <div class="oc-summary-card"><div class="lbl" style="color:#15803D">符合規格</div><div class="val" style="color:#15803D">${passCount}</div></div>
+      <div class="oc-summary-card"><div class="lbl" style="color:#B91C1C">不符合規格</div><div class="val" style="color:#B91C1C">${failCount}</div></div>
+      <div class="oc-summary-card"><div class="lbl">僅供參考（人工核對）</div><div class="val" style="color:#64748B">${refCount}</div></div>
+    </div>
+    ${lockBanner}
+    <div class="oc-flow-track">
+      ${ocRenderManualStep1(d)}
+      ${ocRenderManualStep2(d)}
+      <div class="${closedStep ? 'oc-step-card dimmed' : ''}" style="${closedStep ? 'padding:0;border:none;background:none;margin-bottom:0' : ''}">
+        ${!closedStep ? stepsHtml : `<div style="opacity:.35;filter:grayscale(60%);pointer-events:none">${stepsHtml}</div>`}
+      </div>
+      ${ocRenderManualStep9(d)}
+      ${ocRenderManualStep10(d, step10Dimmed)}
+    </div>
+    <div class="oc-note-line">
+      ※ 若該批次尚未連接製程履歷、或對應站別 Move out 沒有登記到參數，該項目會顯示「無資料」而非直接判定合格／不合格。Step 1／2／9／10 為人工填寫項目，系統不自動判定。
+    </div>
+    <div class="oc-final-note">
+      <div class="k">📝 案件備註</div>
+      <textarea id="ocFinalNote" placeholder="填寫本次 OCAP 案件的補充說明、根本原因分析、後續處置方式…">${ocEscHtml(d.note)}</textarea>
+      <button type="button" class="save-btn" onclick="ocSaveConfirm()">儲存確認</button>
+      <div class="save-hint">${d.savedAt ? `上次儲存：${d.savedAt}（僅存於此瀏覽器本機，換裝置或清除快取會遺失）` : '＊ 儲存後會存在此瀏覽器本機（localStorage），不會同步到其他電腦或瀏覽器。'}</div>
+    </div>
+  `;
+}
 </script>
