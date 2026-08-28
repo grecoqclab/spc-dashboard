@@ -2332,7 +2332,7 @@ async function gsDbLoad() {
 
     gsDbConnected = true;
     setGsDbStatus('ok', `✅ 已連接 Google Sheets 資料庫（載入 ${loadedCount} 筆界限）`);
-    if(SHEETS.length) update();
+    if(SHEETS.length) { autoApplyLimitMode(); update(); }
     return true;
   } catch(err) {
     setGsDbStatus('err', `❌ 讀取失敗：${err.message}`);
@@ -2508,6 +2508,24 @@ function setMode(m) {
   document.getElementById('btnCustom').classList.toggle('active', m==='custom');
   document.getElementById('customPanel').style.display = m==='custom' ? '' : 'none';
   update();
+}
+
+// 自動判斷本次應該用哪種管制界限：該料號/檢驗項目若已有人設定過自訂（含雲端同步的自動）管制界限，
+// 優先套用；沒有的話才退回統計管制界限 (±3σ)。在切換料號/檢驗項目、以及自訂界限剛載入完成時呼叫。
+// 注意：不呼叫 update()，由呼叫端自行決定何時重繪，避免重複渲染。
+function autoApplyLimitMode() {
+  const sheetSel = document.getElementById('sheetSel');
+  const metricSel = document.getElementById('metricSel');
+  if(!sheetSel || !metricSel) return;
+  const sheetIdx = parseInt(sheetSel.value);
+  const metricKey = metricSel.value;
+  mode = getLim(sheetIdx, metricKey) ? 'custom' : 'stat';
+  const btnStat = document.getElementById('btnStat');
+  const btnCustom = document.getElementById('btnCustom');
+  const panel = document.getElementById('customPanel');
+  if(btnStat) btnStat.classList.toggle('active', mode==='stat');
+  if(btnCustom) btnCustom.classList.toggle('active', mode==='custom');
+  if(panel) panel.style.display = mode==='custom' ? '' : 'none';
 }
 
 function getSeriesData(sheetIdx, metricKey) {
@@ -2995,10 +3013,12 @@ function update() {
 
 document.getElementById('sheetSel').addEventListener('change', ()=>{
   buildMetricOptions(parseInt(document.getElementById('sheetSel').value));
+  autoApplyLimitMode();
   update();
   if(document.getElementById('tabWeekly').classList.contains('active')) renderWeeklyPage();
 });
 document.getElementById('metricSel').addEventListener('change', ()=>{
+  autoApplyLimitMode();
   update();
   if(document.getElementById('tabWeekly').classList.contains('active')) renderWeeklyPage();
 });
@@ -3782,6 +3802,7 @@ function renderWeeklyPage() {
 buildRuleMetricOptions(0);
 buildWeeklyMetricOptions();
 buildMetricOptions(0);
+autoApplyLimitMode();
 update();
 
 // ── localStorage 持久化 ───────────────────────────────────────────────────
