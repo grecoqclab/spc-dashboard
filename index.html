@@ -381,6 +381,10 @@ body{font-family:var(--font-sans)}
 .ph-param-hide-btn{flex:0 0 auto;width:18px;height:18px;border-radius:4px;border:none;background:transparent;color:#CBD5E1;cursor:pointer;font-size:12px;line-height:1;transition:all .12s}
 .ph-param-hide-btn:hover{background:#FEE2E2;color:#B91C1C}
 .ph-param-empty{font-size:12px;color:#94A3B8;font-style:italic;padding:8px 10px}
+
+.cmp-mark-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:12px;background:#FCE7F3;color:#9D174D;font-weight:600;white-space:nowrap}
+.cmp-mark-chip button{border:none;background:transparent;color:#9D174D;cursor:pointer;font-size:12px;line-height:1;padding:0;font-weight:700}
+.cmp-mark-chip button:hover{color:#DB2777}
 </style>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -1293,6 +1297,13 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
       </div>
       <div id="cmpSummary" style="font-size:12px;color:#64748B;margin-top:10px"></div>
       <div id="cmpHiddenNote" style="font-size:11px;color:#94A3B8;margin-top:4px"></div>
+      <div class="ph-search-bar" style="margin-top:10px;margin-bottom:0;padding-top:10px;border-top:1px dashed #E2E8F0">
+        <label style="font-size:12px;color:#64748B;white-space:nowrap">🔖 標記批次（僅本次瀏覽，重新整理後清空）</label>
+        <select id="cmpMarkBatchSel" style="min-width:160px"><option value="">選擇 Batch ID…</option></select>
+        <input type="text" id="cmpMarkNote" placeholder="備註（選填）" style="min-width:200px">
+        <button class="ph-connect-btn" style="height:34px" onclick="addCompareMark()">標記</button>
+        <div id="cmpMarkChips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
     </div>
     <div id="cmpCharts"></div>
   </div><!-- /tabCompare -->
@@ -5060,6 +5071,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let cmpChartInsts = {};
 let cmpSpcChartInst = null;
+// ── 批次標記（僅本次瀏覽 session 有效，不持久化）：Batch ID -> 備註字串 ──
+let COMPARE_MARKS = new Map();
+let CMP_LAST_BATCHES = []; // 上一次「產生比對圖」時，實際有共同資料的 batch 清單（供標記下拉選單使用）
 
 function populateCompareSelectors() {
   const sheetSel = document.getElementById('cmpSheetSel');
@@ -5072,14 +5086,21 @@ function populateCompareSelectors() {
   renderCompareParamList();
 }
 
+// 前期指標比對用的參數清單：不含 TTC 站別（TTC板壓膜／TTC板顯影），僅用於此分頁下拉勾選；
+// 「🔗 製程履歷」分頁的樞紐表仍照 PROCESS_PARAM_OPTIONS 原樣顯示 TTC 欄位，不受影響。
+function getCompareParamOptions() {
+  return PROCESS_PARAM_OPTIONS.filter(function(o) { return !/TTC/i.test(o.station); });
+}
+
 function renderCompareParamList() {
   const listEl = document.getElementById('cmpParamList');
   if(!listEl) return;
   const prevChecked = new Set(getCompareSelectedParamKeys());
-  if(!PROCESS_PARAM_OPTIONS.length) {
+  const options = getCompareParamOptions();
+  if(!options.length) {
     listEl.innerHTML = '<div class="ph-param-empty">尚無可比對的前期參數，請先於「🔗 製程履歷」連接 Google Sheet。</div>';
   } else {
-    listEl.innerHTML = PROCESS_PARAM_OPTIONS.map(function(o) {
+    listEl.innerHTML = options.map(function(o) {
       const checked = prevChecked.size ? prevChecked.has(o.key) : false;
       return `<div class="ph-param-row">
           <label><input type="checkbox" class="cmp-param-cb" value="${o.key}" ${checked?'checked':''}><span class="ph-param-text">${o.station}｜${o.param}</span></label>
@@ -5097,6 +5118,44 @@ function renderCompareParamList() {
 
 function getCompareSelectedParamKeys() {
   return Array.from(document.querySelectorAll('#cmpParamList .cmp-param-cb:checked')).map(function(cb){ return cb.value; });
+}
+
+// ── 批次標記：下拉選單只列「這次產生比對圖時，實際有共同資料的批次」──────
+function populateCompareMarkSel() {
+  const sel = document.getElementById('cmpMarkBatchSel');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">選擇 Batch ID…</option>' +
+    CMP_LAST_BATCHES.map(function(b){ return `<option value="${b}">${b}</option>`; }).join('');
+  if(CMP_LAST_BATCHES.indexOf(cur) !== -1) sel.value = cur;
+}
+
+function addCompareMark() {
+  const sel = document.getElementById('cmpMarkBatchSel');
+  const noteEl = document.getElementById('cmpMarkNote');
+  const batch = sel && sel.value;
+  if(!batch) return;
+  COMPARE_MARKS.set(batch, ((noteEl && noteEl.value) || '').trim());
+  if(noteEl) noteEl.value = '';
+  if(sel) sel.value = '';
+  renderCompareMarkChips();
+  renderCompare();
+}
+
+function removeCompareMark(batch) {
+  COMPARE_MARKS.delete(batch);
+  renderCompareMarkChips();
+  renderCompare();
+}
+
+function renderCompareMarkChips() {
+  const el = document.getElementById('cmpMarkChips');
+  if(!el) return;
+  if(!COMPARE_MARKS.size) { el.innerHTML = ''; return; }
+  el.innerHTML = Array.from(COMPARE_MARKS.entries()).map(function(entry) {
+    const b = entry[0], note = entry[1];
+    return `<span class="cmp-mark-chip">🔖 ${b}${note ? '：' + note : ''}<button type="button" onclick="removeCompareMark('${escAttr(b)}')" title="移除標記">✕</button></span>`;
+  }).join('');
 }
 
 function populateCompareMetricSel() {
@@ -5143,6 +5202,10 @@ function renderCompare() {
     return { batch:d.batch, date:d.date, qcValue:d.value, rec:PROCESS_RAW[d.batch] };
   }).filter(function(x){ return !!x.rec; });
 
+  CMP_LAST_BATCHES = matched.map(function(mm){ return mm.batch; });
+  populateCompareMarkSel();
+  renderCompareMarkChips();
+
   const m = METRICS.find(function(x){ return x.key===metricKey; });
   summaryEl.innerHTML = `共比對到 <b>${matched.length}</b> 筆共同批次（「${m?m.label:metricKey}」量測值 ${series.length} 筆 · 製程履歷共 ${Object.keys(PROCESS_RAW).length} 批次）`;
 
@@ -5184,17 +5247,26 @@ function renderCompare() {
     const labels = pts.map(function(p){ return p.batch.length>10 ? p.batch.slice(0,10)+'…' : p.batch; });
     const indicatorVals = pts.map(function(p){ return p.paramValue; });
     const qcVals = pts.map(function(p){ return p.qcValue; });
+    // 已標記的批次：資料點放大並加上桃紅色外框，方便在圖上一眼認出
+    const markRadius = pts.map(function(p){ return COMPARE_MARKS.has(p.batch) ? 7 : 3; });
+    const markBorderW = pts.map(function(p){ return COMPARE_MARKS.has(p.batch) ? 3 : 0; });
+    const markBorderColor = pts.map(function(p){ return COMPARE_MARKS.has(p.batch) ? '#DB2777' : 'transparent'; });
 
     if(cmpChartInsts[ci]) cmpChartInsts[ci].destroy();
     cmpChartInsts[ci] = new Chart(canvas, {
       type:'line',
       data:{ labels:labels, datasets:[
-        { label:param, data:indicatorVals, borderColor:'#F59E0B', backgroundColor:'#F59E0B', pointBackgroundColor:'#F59E0B', yAxisID:'y1', pointRadius:3, tension:0.15, borderWidth:1.5 },
-        { label:'量測值', data:qcVals, borderColor:'#378ADD', backgroundColor:'#378ADD', pointBackgroundColor:'#378ADD', yAxisID:'y2', pointRadius:3, tension:0.15, borderWidth:1.5 },
+        { label:param, data:indicatorVals, borderColor:'#F59E0B', backgroundColor:'#F59E0B', pointBackgroundColor:'#F59E0B', pointBorderColor:markBorderColor, pointBorderWidth:markBorderW, yAxisID:'y1', pointRadius:markRadius, tension:0.15, borderWidth:1.5 },
+        { label:'量測值', data:qcVals, borderColor:'#378ADD', backgroundColor:'#378ADD', pointBackgroundColor:'#378ADD', pointBorderColor:markBorderColor, pointBorderWidth:markBorderW, yAxisID:'y2', pointRadius:markRadius, tension:0.15, borderWidth:1.5 },
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ display:true, labels:{ font:{size:10}, boxWidth:12 } },
-          tooltip:{ callbacks:{ title:function(ctx){ return pts[ctx[0].dataIndex] ? pts[ctx[0].dataIndex].batch : ''; } } } },
+          tooltip:{ callbacks:{ title:function(ctx){
+            const p = pts[ctx[0].dataIndex];
+            if(!p) return '';
+            if(COMPARE_MARKS.has(p.batch)) { const note = COMPARE_MARKS.get(p.batch); return p.batch + ' 🔖' + (note ? ' ' + note : ' 已標記'); }
+            return p.batch;
+          } } } },
         scales:{
           x:{ ticks:{ font:{size:9}, maxRotation:45, autoSkip:true, maxTicksLimit:12 } },
           y1:{ type:'linear', position:'left', ticks:{ font:{size:9}, color:'#B45309' } },
@@ -5222,18 +5294,27 @@ function renderCompare() {
     const sigma = mrBar / 1.128;
     const UCL = mean + 3*sigma, LCL = mean - 3*sigma;
     const ptColors = spcVals.map(function(v){ return (v>UCL||v<LCL) ? '#E24B4A' : '#378ADD'; });
+    // 已標記的批次：放大並加桃紅色外框，跟 OOC 的紅色填色可以同時並存分辨
+    const spcMarkRadius = matched.map(function(mm){ return COMPARE_MARKS.has(mm.batch) ? 7 : 4; });
+    const spcMarkBorderW = matched.map(function(mm){ return COMPARE_MARKS.has(mm.batch) ? 3 : 0; });
+    const spcMarkBorderColor = matched.map(function(mm){ return COMPARE_MARKS.has(mm.batch) ? '#DB2777' : 'transparent'; });
     if(cmpSpcChartInst) cmpSpcChartInst.destroy();
     cmpSpcChartInst = new Chart(spcCanvas, {
       type:'line',
       data:{ labels:spcLabels, datasets:[
-        { label:'量測值', data:spcVals, borderColor:'#378ADD', pointBackgroundColor:ptColors, pointRadius:4, tension:0.1, borderWidth:1.5 },
+        { label:'量測值', data:spcVals, borderColor:'#378ADD', pointBackgroundColor:ptColors, pointBorderColor:spcMarkBorderColor, pointBorderWidth:spcMarkBorderW, pointRadius:spcMarkRadius, tension:0.1, borderWidth:1.5 },
         { label:'UCL', data:Array(spcVals.length).fill(UCL), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0 },
         { label:'CL', data:Array(spcVals.length).fill(mean), borderColor:'#888780', borderDash:[4,3], borderWidth:1, pointRadius:0 },
         { label:'LCL', data:Array(spcVals.length).fill(LCL), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0 },
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ display:false },
-          tooltip:{ callbacks:{ title:function(ctx){ return matched[ctx[0].dataIndex] ? matched[ctx[0].dataIndex].batch : ''; } } } },
+          tooltip:{ callbacks:{ title:function(ctx){
+            const mm = matched[ctx[0].dataIndex];
+            if(!mm) return '';
+            if(COMPARE_MARKS.has(mm.batch)) { const note = COMPARE_MARKS.get(mm.batch); return mm.batch + ' 🔖' + (note ? ' ' + note : ' 已標記'); }
+            return mm.batch;
+          } } } },
         scales:{ x:{ ticks:{ font:{size:9}, maxRotation:45, autoSkip:true, maxTicksLimit:12 } }, y:{ ticks:{ font:{size:10} } } } }
     });
   } else if(spcCanvas) {
