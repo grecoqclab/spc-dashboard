@@ -2807,7 +2807,7 @@ function update() {
   // ── Run active SPC rules for this metric ──────────────────────────────
   const chartSheetIdx = parseInt(document.getElementById('sheetSel').value);
   const enabledSetChart = getRuleKey(chartSheetIdx, metricKey);
-  const chartViolations = runRuleCheck(vals, spc.mean, spc.sigma, enabledSetChart);
+  const chartViolations = runRuleCheck(vals, spc.mean, spc.sigma, enabledSetChart, {ucl:activeUCL, lcl:activeLCL});
   // Map pointIdx → list of violated rules
   const violByIdx = {};
   chartViolations.forEach(v => {
@@ -3044,8 +3044,16 @@ const SPC_RULES = [
   {
     id: 'R1',
     name: '規則 1：超出管制界限',
-    desc: '任何 1 點落在 UCL 或 LCL 之外（±3σ 外）。最基本的失控訊號。',
-    check: (vals, mean, sigma) => vals.map((v,i) => Math.abs(v-mean) > 3*sigma ? {i, detail:'超出±3σ'} : null).filter(Boolean)
+    desc: '任何 1 點落在目前生效的管制界限之外（自訂管制界限優先；未設定自訂界限時，退回統計 ±3σ）。最基本的失控訊號。',
+    // activeLimits 由呼叫端傳入目前畫面實際生效的 {ucl,lcl}（自訂優先，其次統計 mean±3σ），
+    // 讓 R1 跟圖上紅點/違規清單用同一套界限判斷，不會自訂界限內的點卻被判違規。
+    check: (vals, mean, sigma, activeLimits) => {
+      const ucl = activeLimits ? activeLimits.ucl : mean + 3*sigma;
+      const lcl = activeLimits ? activeLimits.lcl : mean - 3*sigma;
+      return vals.map((v,i) => (v > ucl || v < lcl)
+        ? { i, detail: activeLimits ? `超出目前管制界限（${lcl.toFixed(2)}~${ucl.toFixed(2)}）` : '超出±3σ' }
+        : null).filter(Boolean);
+    }
   },
   {
     id: 'R2',
@@ -3282,11 +3290,11 @@ function buildRuleMetricOptions(sheetIdx) {
   });
 }
 
-function runRuleCheck(vals, mean, sigma, enabledSet) {
+function runRuleCheck(vals, mean, sigma, enabledSet, activeLimits) {
   const allViolations = [];
   SPC_RULES.forEach(rule => {
     if(!enabledSet.has(rule.id)) return;
-    const hits = rule.check(vals, mean, sigma);
+    const hits = rule.check(vals, mean, sigma, activeLimits);
     hits.forEach(h => allViolations.push({ruleId:rule.id, ruleName:rule.name, pointIdx:h.i, detail:h.detail}));
   });
   // Deduplicate by point index but keep all rule matches
@@ -3302,6 +3310,16 @@ function renderRulesPage() {
   const vals = series.map(x=>x.value);
   const enabledSet = getRuleKey(sheetIdx, metricKey);
   const sheetName = SHEETS[sheetIdx].replace('出KTC資料-','');
+
+  // 目前生效的管制界限（自訂優先，其次統計 ±3σ）— 跟管制圖分頁同一套邏輯，
+  // 讓規則 1 的違規清單也跟圖表上的紅點/自訂界限一致。
+  // 注意：這裡是依「規則」分頁自己選的 sheetIdx/metricKey 直接查是否有自訂界限，
+  // 不依賴管制圖分頁的全域 mode 開關（管制圖分頁跟規則分頁可能選著不同的產品/項目）。
+  const rpCustomLim = getLim(sheetIdx, metricKey);
+  const activeLimits = {
+    ucl: rpCustomLim ? rpCustomLim.hi : spc.UCL,
+    lcl: rpCustomLim ? rpCustomLim.lo : spc.LCL,
+  };
 
   // Summary bar
   const summaryGrid = SPC_RULES.map(r =>
@@ -3327,7 +3345,7 @@ function renderRulesPage() {
   }).join('');
 
   // Violations table
-  const violations = runRuleCheck(vals, spc.mean, spc.sigma, enabledSet);
+  const violations = runRuleCheck(vals, spc.mean, spc.sigma, enabledSet, activeLimits);
   document.getElementById('rvTitle').textContent = `違規批次清單 — ${sheetName} / ${m.label}`;
   const rvBody = document.getElementById('rvBody');
   if(!violations.length) {
