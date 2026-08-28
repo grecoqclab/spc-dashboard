@@ -327,6 +327,74 @@ body{font-family:var(--font-sans)}
 .ctrl-subtab.ctrl-on{background:#fff;color:#1E293B;box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .ctrl-subpage{display:none}
 .ctrl-subpage.ctrl-on{display:block}
+
+/* ══════════════════════════════════════════════
+   Process History — Batch Card Modal + 製程履歷分頁
+══════════════════════════════════════════════ */
+#bcModalOverlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:520;align-items:center;justify-content:center;padding:16px}
+#bcModalOverlay.show{display:flex}
+#bcModal{background:#fff;border-radius:12px;width:100%;max-width:760px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(15,23,42,.25);display:flex;flex-direction:column}
+.bc-modal-header{padding:18px 24px 14px;border-bottom:1px solid #E2E8F0;display:flex;align-items:flex-start;gap:12px}
+.bc-modal-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.bc-modal-title-block{flex:1}
+.bc-modal-title{font-size:16px;font-weight:700;color:#1E293B;margin-bottom:2px}
+.bc-modal-sub{font-size:12px;color:#64748B}
+.bc-modal-close{background:none;border:none;font-size:20px;color:#94A3B8;cursor:pointer;padding:4px;border-radius:4px;line-height:1;flex-shrink:0}
+.bc-modal-close:hover{color:#475569;background:#F1F5F9}
+.bc-modal-body{padding:18px 24px 22px;display:flex;flex-direction:column;gap:16px}
+.bc-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px}
+.bc-info-item .lbl{font-size:10px;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.bc-info-item .val{font-size:13px;font-weight:600;color:#1E293B}
+.bc-info-item .val.bad{color:#B91C1C}
+.bc-info-item .val.ok{color:#15803D}
+.bc-section-title{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+.bc-timeline{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:6px 2px 10px}
+.bc-station{flex:0 0 auto;min-width:108px;text-align:center;position:relative;cursor:pointer}
+.bc-station-dot{width:26px;height:26px;border-radius:50%;background:#EFF6FF;border:2px solid #3B82F6;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:12px;color:#1D4ED8;font-weight:700;transition:all .15s}
+.bc-station.has-params .bc-station-dot{background:#DBEAFE;border-color:#2563EB}
+.bc-station:hover .bc-station-dot{transform:scale(1.12);box-shadow:0 0 0 4px rgba(37,99,235,.15)}
+.bc-station.active .bc-station-dot{background:#2563EB;border-color:#1D4ED8;color:#fff}
+.bc-station-name{font-size:11px;font-weight:600;color:#1E293B;white-space:nowrap}
+.bc-station-time{font-size:10px;color:#94A3B8;margin-top:1px;white-space:nowrap}
+.bc-station-dur{font-size:10px;color:#2563EB;font-weight:600;margin-top:1px;white-space:nowrap}
+.bc-connector{flex:1 1 24px;height:2px;background:#CBD5E1;margin-top:13px;min-width:16px}
+.bc-params-panel{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px}
+.bc-params-empty{font-size:12px;color:#94A3B8;font-style:italic;padding:6px 0}
+.bc-params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.bc-param-cell{background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:7px 10px}
+.bc-param-cell .k{font-size:10px;color:#94A3B8;margin-bottom:2px}
+.bc-param-cell .v{font-size:13px;font-weight:600;color:#1E293B}
+.bc-no-data{font-size:12px;color:#94A3B8;padding:20px 0;text-align:center;line-height:1.8}
+
+/* Process History source connect panel */
+.ph-connect-panel{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;margin-bottom:1.25rem}
+.ph-connect-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.ph-connect-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px}
+.ph-connect-field label{font-size:11px;color:#64748B;font-weight:500}
+.ph-connect-field input{height:34px;padding:0 10px;font-size:12px;border-radius:6px;border:1px solid #CBD5E1;background:#fff;color:#1E293B;width:100%}
+.ph-connect-btn{height:34px;padding:0 18px;font-size:12px;font-weight:700;border-radius:6px;border:none;background:#2563EB;color:#fff;cursor:pointer;transition:background .15s;white-space:nowrap}
+.ph-connect-btn:hover{background:#1D4ED8}
+.ph-connect-btn:disabled{background:#94A3B8;cursor:not-allowed}
+.ph-status{font-size:12px;padding:8px 12px;border-radius:6px;margin-top:10px;display:none}
+.ph-status.ok{display:block;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7}
+.ph-status.err{display:block;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5}
+.ph-status.loading{display:block;background:#EFF6FF;color:#1D4ED8;border:1px solid #93C5FD}
+.ph-search-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ph-search-bar input{height:34px;padding:0 12px;font-size:12px;border-radius:6px;border:1px solid #CBD5E1;min-width:220px}
+.ph-search-bar select{height:34px;padding:0 10px;font-size:12px;border-radius:6px;border:1px solid #CBD5E1;background:#fff}
+.ph-table-wrap{background:#fff;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;overflow-x:auto}
+.ph-table{width:100%;border-collapse:collapse;font-size:12px}
+.ph-table th{text-align:left;padding:8px 12px;background:#F1F5F9;color:#475569;font-weight:600;border-bottom:1px solid #E2E8F0;white-space:nowrap}
+.ph-table td{padding:8px 12px;border-bottom:1px solid #F1F5F9;color:#334155;vertical-align:middle}
+.ph-table tr:last-child td{border-bottom:none}
+.ph-table tr.ph-row{cursor:pointer;transition:background .12s}
+.ph-table tr.ph-row:hover{background:#F8FAFC}
+.ph-station-chip{display:inline-flex;font-size:10px;padding:2px 7px;border-radius:10px;background:#EFF6FF;color:#1D4ED8;font-weight:600;margin:1px}
+.ph-empty{font-size:12px;color:#94A3B8;font-style:italic;padding:24px;text-align:center}
+
+/* OCAP modal — production params section */
+.ocap-process-panel{background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;padding:12px 14px}
+.ocap-process-title{font-size:11px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 </style>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -376,6 +444,12 @@ body{font-family:var(--font-sans)}
           <label class="ocap-field-label">偵測時間</label>
           <input class="ocap-input" id="ocapDetectedAt" readonly placeholder="—">
         </div>
+      </div>
+
+      <!-- 生產參數（違規當下）── 由 WBR 製程履歷（Google Sheet）依 Batch ID 自動帶出 -->
+      <div class="ocap-process-panel" id="ocapProcessPanel" style="display:none">
+        <div class="ocap-process-title">🏭 生產參數（違規批次．當下製程履歷）</div>
+        <div id="ocapProcessBody"></div>
       </div>
 
       <!-- 填寫欄位 -->
@@ -428,6 +502,23 @@ body{font-family:var(--font-sans)}
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════
+     Batch Card Modal — 批次卡片（點擊圖表資料點 / 製程履歷列表 開啟）
+═══════════════════════════════════════════════════════ -->
+<div id="bcModalOverlay" onclick="if(event.target===this)closeBatchCard()">
+  <div id="bcModal">
+    <div class="bc-modal-header">
+      <span class="bc-modal-icon">🧾</span>
+      <div class="bc-modal-title-block">
+        <div class="bc-modal-title" id="bcModalTitle">批次卡片</div>
+        <div class="bc-modal-sub" id="bcModalSub">—</div>
+      </div>
+      <button class="bc-modal-close" onclick="closeBatchCard()">×</button>
+    </div>
+    <div class="bc-modal-body" id="bcModalBody"></div>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="header">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
@@ -458,6 +549,7 @@ body{font-family:var(--font-sans)}
     <button class="tab-btn" id="tabBtnImport" onclick="switchTab('import')">📥 資料匯入</button>
     <button class="tab-btn" id="tabBtnOcap" onclick="switchTab('ocap')">🔔 OCAP 設定</button>
     <button class="tab-btn" id="tabBtnCtrl" onclick="switchTab('ctrl')">🧪 對照組統整</button>
+    <button class="tab-btn" id="tabBtnProcess" onclick="switchTab('process')">🔗 製程履歷</button>
   </div>
 
   <!-- ── Chart Analysis Tab ── -->
@@ -1213,6 +1305,49 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
 
   </div><!-- /tabCtrl -->
 
+  <!-- ════════════ 製程履歷分頁 ════════════ -->
+  <div class="tab-page" id="tabProcess">
+    <div class="ph-connect-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#1E293B">🔗 連接 WBR 製程履歷（Google Sheet）</div>
+          <div style="font-size:11px;color:#64748B;margin-top:2px">依 Batch ID 把「各站進出時間 + 製程參數」跟上方 SPC 品質資料合併，供資料點與 OCAP 追溯生產現場條件。試算表需設為「知道連結的使用者均可檢視」。</div>
+        </div>
+        <span id="phConnBadge" style="font-size:11px;color:#94A3B8;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#CBD5E1;margin-right:4px"></span>尚未連接</span>
+      </div>
+      <div class="ph-connect-row">
+        <div class="ph-connect-field" style="flex:2">
+          <label>Google Sheet ID 或網址</label>
+          <input type="text" id="phSheetId" value="1ZvWo2xNmW7CzpBwltlOLBYzU0GWgZ37G0-7SKsJxoJw" placeholder="例：1ZvWo2xNmW7CzpBwltlOLBYzU0GWgZ37G0-7SKsJxoJw">
+        </div>
+        <div class="ph-connect-field">
+          <label>工作表分頁名稱</label>
+          <input type="text" id="phSheetName" value="Process History">
+        </div>
+        <button class="ph-connect-btn" id="phConnectBtn" onclick="connectProcessSheet()">連接並同步</button>
+      </div>
+      <div class="ph-status" id="phStatus"></div>
+    </div>
+
+    <div class="ph-search-bar">
+      <input type="text" id="phSearchBatch" placeholder="搜尋 Batch ID…" oninput="renderProcessTable()">
+      <select id="phSearchStation" onchange="renderProcessTable()">
+        <option value="">全部站別</option>
+      </select>
+      <span id="phCountLabel" style="font-size:12px;color:#64748B"></span>
+    </div>
+
+    <div class="ph-table-wrap">
+      <table class="ph-table">
+        <thead>
+          <tr>
+            <th>Batch ID</th><th>Type</th><th>目前狀態</th><th>站別數</th><th>流程起訖</th><th>總耗時</th><th>經過站別</th>
+          </tr>
+        </thead>
+        <tbody id="phTableBody"></tbody>
+      </table>
+    </div>
+  </div><!-- /tabProcess -->
 
 </div><!-- /wrap -->
 
@@ -2850,14 +2985,23 @@ function update() {
   if(!xCfg.options) xCfg.options = {};
   const _seriesForClick = series;
   xCfg.options.onClick = function(evt, elements) {
-    if(!excludeMode) return;
     if(!elements || !elements.length) return;
     const idx = elements[0].index;
     const d = _seriesForClick[idx];
-    if(d) toggleExcludePoint({batch:d.batch, date:d.date});
+    if(!d) return;
+    if(excludeMode) { toggleExcludePoint({batch:d.batch, date:d.date}); return; }
+    if(typeof openBatchCard === 'function') {
+      openBatchCard(d.batch, {
+        sheetName: SHEETS[sheetIdx] ? SHEETS[sheetIdx].replace('出KTC資料-','') : '',
+        metricLabel: m.label,
+        qcValue: vals[idx],
+        qcDate: d.date,
+        isViolation: (vals[idx] > activeUCL || vals[idx] < activeLCL)
+      });
+    }
   };
   xCfg.options.onHover = function(evt, elements) {
-    if(excludeMode && evt.native && evt.native.target) {
+    if(evt.native && evt.native.target) {
       evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
     }
   };
@@ -2910,7 +3054,7 @@ document.getElementById('metricSel').addEventListener('change', ()=>{
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['chart','rules','weekly','import','ocap','ctrl'].forEach(t => {
+  ['chart','rules','weekly','import','ocap','ctrl','process'].forEach(t => {
     const btn = document.getElementById('tabBtn'+t.charAt(0).toUpperCase()+t.slice(1));
     const page = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if(btn) btn.classList.toggle('active', t===tab);
@@ -2929,6 +3073,10 @@ function switchTab(tab) {
   }
   if(tab==='ctrl') {
     if(typeof initCtrlMerge === 'function') initCtrlMerge();
+  }
+  if(tab==='process') {
+    if(typeof populatePhStationFilter === 'function') populatePhStationFilter();
+    if(typeof renderProcessTable === 'function') renderProcessTable();
   }
 }
 
@@ -3938,6 +4086,8 @@ function openOcapModal(violation) {
   document.getElementById('ocapModalSub').textContent =
     `${violation.product || ''} — ${violation.rule || ''} 管制違規`;
 
+  if(typeof renderOcapProcessPanel === 'function') renderOcapProcessPanel(violation.batch);
+
   // Reset fill-in fields
   document.getElementById('ocapCause').value  = '';
   document.getElementById('ocapAction').value = '';
@@ -4686,4 +4836,385 @@ function ctrlRenderActiveSub(){
 }
 /* ════════════════════ 對照組統整模組結束 ════════════════════ */
 
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   ── WBR 製程履歷（Google Sheet）模組 ──────────────────────────────────────
+   資料層：抓取 WBR Process History 分頁（Move in / Move out 成對紀錄），
+           依 Batch ID + Station 合併成「一個 Batch ID → 完整站點履歷」，
+           再以 Batch ID 跟現有 SPC 品質資料（series 中的 .batch）串接。
+   呈現層三個掛載點：
+     1) 圖表資料點點擊 → openBatchCard()（見 update() 內 xCfg.options.onClick）
+     2) OCAP 異常面板   → renderOcapProcessPanel()（見 openOcapModal()）
+     3) 製程履歷分頁    → renderProcessTable()（見 switchTab('process')）
+   ══════════════════════════════════════════════════════════════════════════ */
+
+let PROCESS_SHEET_ID   = '';
+let PROCESS_SHEET_NAME = 'Process History';
+let PROCESS_RAW        = {};   // batchId -> {batch, type, stations:[{station,moveIn,moveOut,durationMin,params}]}
+let PROCESS_ALL_STATIONS = [];
+let processConnected   = false;
+let bcCurrentRec        = null;
+
+// 履歷表中視為「基本欄位」的欄名，其餘欄一律視為製程參數
+const PH_CORE_COLS = ['Batch ID','Type','Date','Date Time','Station','Status','Operator','Notes'];
+
+// ── 透過 gviz/tq JSONP 抓取整張分頁（不做欄位篩選，保留原始欄名）──────────
+function fetchProcessSheetRaw(sheetId, sheetName) {
+  return new Promise(function(resolve, reject) {
+    const cbName = '_phCallback_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+    const timeout = setTimeout(function() {
+      cleanup();
+      reject(new Error('請求逾時，請確認試算表已設為「知道連結的使用者均可檢視」'));
+    }, 15000);
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const el = document.getElementById('_phScript');
+      if(el) el.remove();
+    }
+    window[cbName] = function(data) {
+      cleanup();
+      try {
+        if(!data || !data.table) { reject(new Error('回傳資料格式錯誤，請確認分頁名稱正確且試算表已公開')); return; }
+        resolve(gvizTableToObjects(data.table));
+      } catch(e) { reject(e); }
+    };
+    const url = 'https://docs.google.com/spreadsheets/d/' + sheetId +
+      '/gviz/tq?tqx=out:json;responseHandler:' + cbName +
+      '&sheet=' + encodeURIComponent(sheetName) +
+      '&tq=' + encodeURIComponent('select *') +
+      '&_t=' + Date.now();
+    const script = document.createElement('script');
+    script.id = '_phScript';
+    script.src = url;
+    script.onerror = function() {
+      cleanup();
+      reject(new Error('無法載入試算表，請確認 Sheet ID 正確且試算表已設為「知道連結的使用者均可檢視」'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function gvizDateToStr(v) {
+  if(v === null || v === undefined) return null;
+  const s = String(v);
+  const dm = s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)$/);
+  if(dm) {
+    const y=+dm[1], mo=+dm[2]+1, d=+dm[3], h=dm[4]?+dm[4]:0, mi=dm[5]?+dm[5]:0, se=dm[6]?+dm[6]:0;
+    const pad=(n)=>String(n).padStart(2,'0');
+    return (h||mi||se) ? `${y}-${pad(mo)}-${pad(d)} ${pad(h)}:${pad(mi)}:${pad(se)}` : `${y}-${pad(mo)}-${pad(d)}`;
+  }
+  return s;
+}
+
+function gvizTableToObjects(table) {
+  const cols = (table.cols||[]).map(function(c){ return (c.label || c.id || '').trim(); });
+  const rows = [];
+  (table.rows||[]).forEach(function(r) {
+    const cells = r.c || [];
+    const obj = {};
+    let hasVal = false;
+    cols.forEach(function(h, j) {
+      if(!h) return;
+      const cell = cells[j];
+      if(!cell || cell.v === null || cell.v === undefined) { obj[h] = null; return; }
+      let v = cell.v;
+      if(typeof v === 'string' && /^Date\(/.test(v)) v = gvizDateToStr(v);
+      obj[h] = v;
+      if(v !== null && String(v).trim() !== '') hasVal = true;
+    });
+    if(hasVal) rows.push(obj);
+  });
+  return rows;
+}
+
+function parseFlexDate(s) {
+  if(!s) return null;
+  const iso = String(s).replace(/\//g,'-');
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// ── 資料層：Move in/out 成對 → 每個 Batch ID 一條完整站點履歷 ──────────────
+function buildProcessHistory(rows) {
+  const byBatch = {};
+  rows.forEach(function(r) {
+    const batch = String(r['Batch ID']||'').trim();
+    const station = String(r['Station']||'').trim();
+    if(!batch || !station) return;
+    const status = String(r['Status']||'').trim();
+    if(!byBatch[batch]) byBatch[batch] = { batch:batch, type:r['Type']||'', stationMap:{}, order:[] };
+    const rec = byBatch[batch];
+    if(!rec.type && r['Type']) rec.type = r['Type'];
+    if(!rec.stationMap[station]) { rec.stationMap[station] = { station:station, moveIn:null, moveOut:null, params:{} }; rec.order.push(station); }
+    const st = rec.stationMap[station];
+    const timeStr = r['Date Time'] || r['Date'] || '';
+    const entry = { time:timeStr, operator:r['Operator']||'', notes:r['Notes']||'' };
+    if(/out/i.test(status)) st.moveOut = entry; else st.moveIn = entry;
+    // 製程參數欄位：非基本欄、且有值 → 記錄（Move out 那筆通常才有值，後寫入者覆蓋前者）
+    Object.keys(r).forEach(function(k) {
+      if(PH_CORE_COLS.indexOf(k) !== -1) return;
+      const v = r[k];
+      if(v === null || v === undefined || String(v).trim() === '') return;
+      st.params[k] = v;
+    });
+  });
+
+  const out = {};
+  const stationSet = {};
+  const stationOrderAll = [];
+  Object.keys(byBatch).forEach(function(bid) {
+    const rec = byBatch[bid];
+    const stations = rec.order.map(function(name) {
+      const s = rec.stationMap[name];
+      let durationMin = null;
+      if(s.moveIn && s.moveOut) {
+        const t1 = parseFlexDate(s.moveIn.time), t2 = parseFlexDate(s.moveOut.time);
+        if(t1 && t2) durationMin = Math.round((t2 - t1) / 60000);
+      }
+      if(!stationSet[name]) { stationSet[name] = true; stationOrderAll.push(name); }
+      return { station:name, moveIn:s.moveIn, moveOut:s.moveOut, durationMin:durationMin, params:s.params };
+    });
+    out[bid] = { batch:bid, type:rec.type, stations:stations };
+  });
+  PROCESS_ALL_STATIONS = stationOrderAll;
+  return out;
+}
+
+// ── 連接 + 同步 ────────────────────────────────────────────────────────────
+async function connectProcessSheet() {
+  const rawInputEl = document.getElementById('phSheetId');
+  const rawInput = (rawInputEl && rawInputEl.value || '').trim();
+  if(!rawInput) { setPhStatus('err', '請輸入 Google Sheet ID 或完整網址'); return; }
+  const urlMatch = rawInput.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const sheetId = urlMatch ? urlMatch[1] : rawInput;
+  const sheetName = (document.getElementById('phSheetName').value || 'Process History').trim();
+  const btn = document.getElementById('phConnectBtn');
+  if(btn) btn.disabled = true;
+  setPhStatus('loading', `🔄 讀取分頁：${sheetName}…`);
+  try {
+    const rows = await fetchProcessSheetRaw(sheetId, sheetName);
+    if(!rows.length) throw new Error('取得資料為空，請確認分頁名稱與內容，且含 Batch ID / Station / Status 欄位');
+    PROCESS_SHEET_ID = sheetId;
+    PROCESS_SHEET_NAME = sheetName;
+    PROCESS_RAW = buildProcessHistory(rows);
+    processConnected = true;
+    const batchCount = Object.keys(PROCESS_RAW).length;
+    setPhStatus('ok', `✅ 已連接，共 ${batchCount} 個批次 · ${rows.length} 筆進出紀錄`);
+    const badge = document.getElementById('phConnBadge');
+    if(badge) badge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22C55E;margin-right:4px"></span>已連接（${batchCount} 批次）`;
+    populatePhStationFilter();
+    renderProcessTable();
+  } catch(err) {
+    processConnected = false;
+    setPhStatus('err', '❌ 連接失敗：' + err.message);
+    const badge = document.getElementById('phConnBadge');
+    if(badge) badge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF4444;margin-right:4px"></span>連接失敗`;
+  }
+  if(btn) btn.disabled = false;
+}
+
+function setPhStatus(type, msg) {
+  const el = document.getElementById('phStatus');
+  if(!el) return;
+  el.className = 'ph-status' + (type ? ' ' + type : '');
+  el.textContent = msg;
+}
+
+function populatePhStationFilter() {
+  const sel = document.getElementById('phSearchStation');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部站別</option>' +
+    PROCESS_ALL_STATIONS.map(function(s){ return `<option value="${s}">${s}</option>`; }).join('');
+  if(PROCESS_ALL_STATIONS.indexOf(cur) !== -1) sel.value = cur;
+}
+
+// ── 呈現層 ③：製程履歷分頁 — 批次列表 + 搜尋 ────────────────────────────
+function lastStationTime(rec) {
+  const last = rec.stations[rec.stations.length-1];
+  if(!last) return '';
+  return (last.moveOut && last.moveOut.time) || (last.moveIn && last.moveIn.time) || '';
+}
+function totalFlowMinutes(rec) {
+  const first = rec.stations[0], last = rec.stations[rec.stations.length-1];
+  if(!first || !last) return null;
+  const t1 = parseFlexDate(first.moveIn ? first.moveIn.time : (first.moveOut ? first.moveOut.time : null));
+  const t2 = parseFlexDate(last.moveOut ? last.moveOut.time : (last.moveIn ? last.moveIn.time : null));
+  if(!t1 || !t2) return null;
+  return Math.round((t2 - t1) / 60000);
+}
+function fmtTimeShort(s) {
+  if(!s) return '—';
+  return String(s).replace(/^\d{4}-/, '');
+}
+function escAttr(s) { return String(s).replace(/'/g, "\\'"); }
+
+function renderProcessTable() {
+  const tbody = document.getElementById('phTableBody');
+  if(!tbody) return;
+  const qEl = document.getElementById('phSearchBatch');
+  const stEl = document.getElementById('phSearchStation');
+  const q = (qEl && qEl.value || '').trim().toLowerCase();
+  const stFilter = stEl && stEl.value || '';
+  const countLbl = document.getElementById('phCountLabel');
+
+  const batches = Object.values(PROCESS_RAW).filter(function(rec) {
+    if(q && rec.batch.toLowerCase().indexOf(q) === -1) return false;
+    if(stFilter && !rec.stations.some(function(s){ return s.station === stFilter; })) return false;
+    return true;
+  }).sort(function(a,b) {
+    return (lastStationTime(b)||'').localeCompare(lastStationTime(a)||'');
+  });
+
+  if(countLbl) countLbl.textContent = `共 ${batches.length} 批次` + (processConnected ? '' : '（尚未連接資料）');
+
+  if(!batches.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="ph-empty">${processConnected ? '找不到符合條件的批次' : '尚未連接 WBR 製程履歷 Google Sheet，請於上方輸入 Sheet ID 並按「連接並同步」'}</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = batches.map(function(rec) {
+    const first = rec.stations[0], last = rec.stations[rec.stations.length-1];
+    const startT = first ? (first.moveIn ? first.moveIn.time : (first.moveOut ? first.moveOut.time : '')) : '';
+    const endT = last ? (last.moveOut ? last.moveOut.time : (last.moveIn ? last.moveIn.time : '')) : '';
+    const totalMin = totalFlowMinutes(rec);
+    const statusLabel = last ? (last.moveOut ? `${last.station} 已完成` : `${last.station} 進行中`) : '—';
+    const chips = rec.stations.map(function(s){ return `<span class="ph-station-chip">${s.station}</span>`; }).join('');
+    return `<tr class="ph-row" onclick="openBatchCard('${escAttr(rec.batch)}')">
+      <td style="font-weight:600">${rec.batch}</td>
+      <td>${rec.type || '—'}</td>
+      <td>${statusLabel}</td>
+      <td>${rec.stations.length}</td>
+      <td style="font-size:11px;color:#64748B;white-space:nowrap">${fmtTimeShort(startT)} → ${fmtTimeShort(endT)}</td>
+      <td>${totalMin != null ? totalMin + ' 分' : '—'}</td>
+      <td>${chips}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 呈現層 ①：批次卡片 Modal（圖表資料點點擊 / 製程履歷列表點擊 都會開啟）──
+function openBatchCard(batchId, meta) {
+  meta = meta || {};
+  const rec = PROCESS_RAW[batchId];
+
+  const titleEl = document.getElementById('bcModalTitle');
+  const subEl = document.getElementById('bcModalSub');
+  if(titleEl) titleEl.textContent = `批次卡片 — ${batchId}`;
+  if(subEl) {
+    const subParts = [];
+    if(meta.sheetName) subParts.push(meta.sheetName);
+    if(meta.metricLabel) subParts.push(meta.metricLabel);
+    if(meta.qcValue != null) subParts.push(`量測值 ${(+meta.qcValue).toFixed(3)}`);
+    if(meta.qcDate) subParts.push(meta.qcDate);
+    subEl.textContent = subParts.length ? subParts.join(' · ') : (rec ? (rec.type||'') : '尚無製程履歷資料');
+  }
+
+  const body = document.getElementById('bcModalBody');
+  if(!body) return;
+
+  if(!rec) {
+    bcCurrentRec = null;
+    body.innerHTML = `<div class="bc-no-data">⚠ 尚未連接 WBR 製程履歷，或此批次目前查無生產紀錄。<br>請至「🔗 製程履歷」分頁輸入 Google Sheet 並「連接並同步」後再試。</div>`;
+    document.getElementById('bcModalOverlay').classList.add('show');
+    return;
+  }
+
+  const totalMin = totalFlowMinutes(rec);
+  const infoHtml = `<div class="bc-info-grid">
+      <div class="bc-info-item"><div class="lbl">Batch ID</div><div class="val">${rec.batch}</div></div>
+      <div class="bc-info-item"><div class="lbl">Type</div><div class="val">${rec.type || '—'}</div></div>
+      <div class="bc-info-item"><div class="lbl">站別數</div><div class="val">${rec.stations.length}</div></div>
+      <div class="bc-info-item"><div class="lbl">總流程時間</div><div class="val">${totalMin != null ? totalMin + ' 分' : '—'}</div></div>
+      ${meta.qcValue != null ? `<div class="bc-info-item"><div class="lbl">${meta.metricLabel || '量測值'}</div><div class="val ${meta.isViolation ? 'bad' : 'ok'}">${(+meta.qcValue).toFixed(3)}</div></div>` : ''}
+    </div>`;
+
+  const timelineHtml = `<div>
+      <div class="bc-section-title">📍 站點時間軸（依進站順序）</div>
+      <div class="bc-timeline">${rec.stations.map(function(s,i) {
+        const hasParams = Object.keys(s.params||{}).length > 0;
+        const t = s.moveIn ? fmtTimeShort(s.moveIn.time) : (s.moveOut ? fmtTimeShort(s.moveOut.time) : '');
+        const dur = s.durationMin != null ? s.durationMin + '分' : '';
+        const connector = i < rec.stations.length - 1 ? '<div class="bc-connector"></div>' : '';
+        return `<div class="bc-station${hasParams ? ' has-params' : ''}" onclick="bcToggleStation(${i})" id="bcStation${i}">
+            <div class="bc-station-dot">${i+1}</div>
+            <div class="bc-station-name">${s.station}</div>
+            <div class="bc-station-time">${t}</div>
+            ${dur ? `<div class="bc-station-dur">⏱ ${dur}</div>` : ''}
+          </div>${connector}`;
+      }).join('')}</div>
+    </div>`;
+
+  const paramsHtml = `<div class="bc-params-panel">
+      <div class="bc-section-title" style="margin-bottom:6px">⚙️ 製程參數展開（點選上方站點切換）</div>
+      <div id="bcParamsContent" class="bc-params-empty">載入中…</div>
+    </div>`;
+
+  body.innerHTML = infoHtml + timelineHtml + paramsHtml;
+  bcCurrentRec = rec;
+  const firstWithParams = rec.stations.findIndex(function(s){ return Object.keys(s.params||{}).length > 0; });
+  bcToggleStation(firstWithParams >= 0 ? firstWithParams : 0);
+
+  document.getElementById('bcModalOverlay').classList.add('show');
+}
+
+function bcToggleStation(i) {
+  if(!bcCurrentRec) return;
+  document.querySelectorAll('.bc-station').forEach(function(el){ el.classList.remove('active'); });
+  const dotEl = document.getElementById('bcStation'+i);
+  if(dotEl) dotEl.classList.add('active');
+  const s = bcCurrentRec.stations[i];
+  const content = document.getElementById('bcParamsContent');
+  if(!s || !content) return;
+
+  const inOp = s.moveIn ? s.moveIn.operator : '', outOp = s.moveOut ? s.moveOut.operator : '';
+  const meta = [];
+  if(s.moveIn) meta.push(`<div class="bc-param-cell"><div class="k">Move in</div><div class="v">${fmtTimeShort(s.moveIn.time)}${inOp ? ' · ' + inOp : ''}</div></div>`);
+  if(s.moveOut) meta.push(`<div class="bc-param-cell"><div class="k">Move out</div><div class="v">${fmtTimeShort(s.moveOut.time)}${outOp ? ' · ' + outOp : ''}</div></div>`);
+
+  const keys = Object.keys(s.params || {});
+  if(!keys.length) {
+    content.innerHTML = `<div class="bc-params-grid">${meta.join('')}</div><div class="bc-params-empty">此站無額外製程參數紀錄</div>`;
+    return;
+  }
+  const paramCells = keys.map(function(k){ return `<div class="bc-param-cell"><div class="k">${k}</div><div class="v">${s.params[k]}</div></div>`; }).join('');
+  content.innerHTML = `<div class="bc-params-grid">${meta.join('')}${paramCells}</div>`;
+}
+
+function closeBatchCard() {
+  document.getElementById('bcModalOverlay').classList.remove('show');
+}
+
+// ── 呈現層 ②：OCAP 異常面板 — 違規當下的生產參數（小型時間軸）─────────────
+function renderOcapProcessPanel(batchId) {
+  const panel = document.getElementById('ocapProcessPanel');
+  const body = document.getElementById('ocapProcessBody');
+  if(!panel || !body) return;
+  const rec = batchId ? PROCESS_RAW[batchId] : null;
+  if(!rec) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  body.innerHTML = `<div class="bc-timeline" style="padding:2px 0 4px">${rec.stations.map(function(s,i) {
+      const hasParams = Object.keys(s.params||{}).length > 0;
+      const t = s.moveIn ? fmtTimeShort(s.moveIn.time) : (s.moveOut ? fmtTimeShort(s.moveOut.time) : '');
+      const dur = s.durationMin != null ? s.durationMin + '分' : '';
+      const connector = i < rec.stations.length - 1 ? '<div class="bc-connector"></div>' : '';
+      return `<div class="bc-station${hasParams ? ' has-params' : ''}">
+          <div class="bc-station-dot" style="width:20px;height:20px;font-size:10px">${i+1}</div>
+          <div class="bc-station-name" style="font-size:10px">${s.station}</div>
+          <div class="bc-station-time" style="font-size:9px">${t}</div>
+          ${dur ? `<div class="bc-station-dur" style="font-size:9px">${dur}</div>` : ''}
+        </div>${connector}`;
+    }).join('')}</div>
+    <div style="text-align:right;margin-top:2px">
+      <button type="button" onclick="openBatchCard('${escAttr(batchId)}')" style="font-size:11px;color:#1D4ED8;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0">查看完整批次卡片 →</button>
+    </div>`;
+}
+
+// ── 開場自動嘗試連接（已預填此對話中提供的 Sheet ID）──────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const idEl = document.getElementById('phSheetId');
+  if(idEl && idEl.value.trim()) connectProcessSheet();
+});
 </script>
