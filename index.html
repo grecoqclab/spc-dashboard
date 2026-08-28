@@ -417,6 +417,33 @@ body{font-family:var(--font-sans)}
 .cmp-mark-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:12px;background:#FCE7F3;color:#9D174D;font-weight:600;white-space:nowrap}
 .cmp-mark-chip button{border:none;background:transparent;color:#9D174D;cursor:pointer;font-size:12px;line-height:1;padding:0;font-weight:700}
 .cmp-mark-chip button:hover{color:#DB2777}
+
+/* ══════════════════════════════════════════════
+   藥液 pH 值監控 分頁
+══════════════════════════════════════════════ */
+.pm-summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.pm-summary-card{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px}
+.pm-summary-card.warn{border-color:#FCA5A5;background:#FEF2F2}
+.pm-sc-title{font-size:12.5px;font-weight:700;color:#1E293B;margin-bottom:8px}
+.pm-sc-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.pm-sc-label{font-size:11px;color:#94A3B8}
+.pm-sc-val{font-size:15px;font-weight:700;color:#1E293B}
+.pm-sc-val.ok{color:#15803D}
+.pm-sc-val.bad{color:#B91C1C}
+.pm-sc-spec{font-size:11px;color:#64748B}
+.pm-sc-foot{font-size:10.5px;color:#94A3B8;margin-top:8px;padding-top:8px;border-top:1px dashed #E2E8F0}
+.pm-sc-badge{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;margin-top:6px}
+.pm-sc-badge.ok{background:#DCFCE7;color:#15803D}
+.pm-sc-badge.bad{background:#FEE2E2;color:#B91C1C}
+.pm-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pm-chart-card{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px}
+.pm-chart-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.pm-chart-card-title{font-size:13px;font-weight:700;color:#1E293B}
+.pm-chart-card-sub{font-size:10.5px;color:#94A3B8}
+.pm-chart-legend-note{font-size:10.5px;color:#64748B;margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+.pm-legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.pm-chart-wrap{position:relative;width:100%;height:210px}
+.pm-item-note{font-size:11px;color:#94A3B8;margin-top:8px}
 </style>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -464,6 +491,7 @@ body{font-family:var(--font-sans)}
     <button class="tab-btn" id="tabBtnCtrl" onclick="switchTab('ctrl')">🧪 對照組統整</button>
     <button class="tab-btn" id="tabBtnProcess" onclick="switchTab('process')">🔗 製程履歷</button>
     <button class="tab-btn" id="tabBtnOcapConfirm" onclick="switchTab('ocapConfirm')">✅ OCAP參數確認</button>
+    <button class="tab-btn" id="tabBtnPhMonitor" onclick="switchTab('phMonitor')">⚗️ 藥液pH監控</button>
     <button class="tab-btn" id="tabBtnCompare" onclick="switchTab('compare')">🔍 前期指標比對</button>
   </div>
 
@@ -1247,6 +1275,31 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
 
     <div id="ocConfirmBody"></div>
   </div><!-- /tabOcapConfirm -->
+
+  <!-- ════════════ 藥液pH監控分頁 ════════════ -->
+  <div class="tab-page" id="tabPhMonitor">
+    <div class="ph-connect-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#1E293B">⚗️ 連接 黃光室 pH 值監控（Google Sheet）</div>
+          <div style="font-size:11px;color:#64748B;margin-top:2px">依固定分頁名單抓取各藥液 pH 輪值紀錄，用試算表裡的 LSL/USL 當規格線，並標示更換事件。試算表需設為「知道連結的使用者均可檢視」。</div>
+        </div>
+        <span id="pmConnBadge" style="font-size:11px;color:#94A3B8;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#CBD5E1;margin-right:4px"></span>尚未連接</span>
+      </div>
+      <div class="ph-connect-row">
+        <div class="ph-connect-field" style="flex:2">
+          <label>Google Sheet ID 或網址</label>
+          <input type="text" id="pmSheetId" placeholder="例：1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789">
+        </div>
+        <button class="ph-connect-btn" id="pmConnectBtn" onclick="connectPhMonitorSheet()">連接並同步</button>
+      </div>
+      <div class="pm-item-note">項目分頁名單（程式內固定，之後要加新藥液項目請告訴我，我會幫你加進清單）：前處理清洗液更換輪值表、E6600021.02顯影液更換輪值表、IPR16490.13去膜液更換輪值表。</div>
+      <div class="ph-status" id="pmStatus"></div>
+    </div>
+
+    <div class="pm-summary-row" id="pmSummaryRow"></div>
+    <div class="pm-chart-grid" id="pmChartGrid"></div>
+  </div><!-- /tabPhMonitor -->
 
   <!-- ════════════ 前期指標比對分頁 ════════════ -->
   <div class="tab-page" id="tabCompare">
@@ -3006,7 +3059,7 @@ document.getElementById('metricSel').addEventListener('change', ()=>{
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  ['chart','rules','weekly','import','ocap','ctrl','process','ocapConfirm','compare'].forEach(t => {
+  ['chart','rules','weekly','import','ocap','ctrl','process','ocapConfirm','phMonitor','compare'].forEach(t => {
     const btn = document.getElementById('tabBtn'+t.charAt(0).toUpperCase()+t.slice(1));
     const page = document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
     if(btn) btn.classList.toggle('active', t===tab);
@@ -3030,6 +3083,9 @@ function switchTab(tab) {
   if(tab==='ocapConfirm') {
     if(typeof populateOcapConfirmBatchSel === 'function') populateOcapConfirmBatchSel();
     if(typeof renderOcapConfirmPage === 'function') renderOcapConfirmPage();
+  }
+  if(tab==='phMonitor') {
+    if(typeof renderPhMonitorPage === 'function') renderPhMonitorPage();
   }
   if(tab==='compare') {
     if(typeof populateCompareSelectors === 'function') populateCompareSelectors();
@@ -4986,6 +5042,283 @@ function renderProcessTable() {
 document.addEventListener('DOMContentLoaded', function() {
   const idEl = document.getElementById('phSheetId');
   if(idEl && idEl.value.trim()) connectProcessSheet();
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ── 藥液 pH 值監控模組 ────────────────────────────────────────────────────
+   獨立於「前期指標比對」之外的監控視圖：依固定分頁名單，從另一份 Google Sheet
+   （黃光室 pH 值監控輪值表）抓取各藥液項目的 pH 讀值，用試算表裡的 LSL/USL
+   當規格線畫趨勢圖，並標示「更換日」事件。跟製程履歷共用同一套 gviz 抓取邏輯
+   （fetchProcessSheetRaw），但資料是「按日期」而非「按 Batch ID」記錄，
+   所以先做成獨立視圖，尚未跟前期指標比對的批次對齊邏輯串接。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+// 項目分頁名單（固定列表；之後新增藥液項目時在這裡補一行即可）
+const PH_MONITOR_ITEMS = [
+  { key:'pre',    name:'前處理清洗液',        tab:'前處理清洗液更換輪值表' },
+  { key:'dev',    name:'E6600021.02 顯影液',  tab:'E6600021.02顯影液更換輪值表' },
+  { key:'strip',  name:'IPR16490.13 去膜液',  tab:'IPR16490.13去膜液更換輪值表' },
+];
+const PH_MONITOR_LS_KEY = 'spc_phMonitorSheetId';
+const PH_MONITOR_COLORS = ['#2563EB', '#7C3AED', '#0D9488'];
+
+let PH_MONITOR_SHEET_ID = '';
+let pmConnected = false;
+let PH_MONITOR_DATA = {}; // { itemKey: { name, tab, series:[{date,value,lsl,usl,replaced,replacedBy,replacedNote,inspector}], lsl, usl, error } }
+
+function setPmStatus(type, msg) {
+  const el = document.getElementById('pmStatus');
+  if(!el) return;
+  el.className = 'ph-status' + (type ? ' ' + type : '');
+  el.textContent = msg;
+}
+
+// 把單一分頁的原始 gviz rows 轉成 { series, lsl, usl }
+function parsePhMonitorRows(rows) {
+  const series = [];
+  let lsl = null, usl = null;
+  rows.forEach(function(r) {
+    const dateRaw = r['日期'];
+    const valRaw = r['pH值'];
+    if(dateRaw === null || dateRaw === undefined || String(dateRaw).trim() === '') return;
+    const v = parseFloat(valRaw);
+    if(isNaN(v)) return;
+    const rowLsl = parseFloat(r['LSL']);
+    const rowUsl = parseFloat(r['USL']);
+    if(!isNaN(rowLsl)) lsl = rowLsl;
+    if(!isNaN(rowUsl)) usl = rowUsl;
+    const replaced = !!(r['更換日'] && String(r['更換日']).trim() !== '');
+    series.push({
+      date: String(dateRaw),
+      value: v,
+      lsl: !isNaN(rowLsl) ? rowLsl : null,
+      usl: !isNaN(rowUsl) ? rowUsl : null,
+      replaced: replaced,
+      replacedBy: r['更換人員'] || '',
+      replacedNote: r['備註'] || '',
+      inspector: r['檢驗人員'] || '',
+    });
+  });
+  // 依日期排序（gvizTableToObjects 已把日期正規化成 YYYY-MM-DD 或原字串，用 parseFlexDate 排序較穩）
+  series.sort(function(a, b) {
+    const ta = parseFlexDate(a.date), tb = parseFlexDate(b.date);
+    if(ta && tb) return ta - tb;
+    return String(a.date).localeCompare(String(b.date));
+  });
+  return { series: series, lsl: lsl, usl: usl };
+}
+
+async function connectPhMonitorSheet() {
+  const rawInputEl = document.getElementById('pmSheetId');
+  const rawInput = (rawInputEl && rawInputEl.value || '').trim();
+  if(!rawInput) { setPmStatus('err', '請輸入 Google Sheet ID 或完整網址'); return; }
+  const urlMatch = rawInput.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const sheetId = urlMatch ? urlMatch[1] : rawInput;
+
+  const btn = document.getElementById('pmConnectBtn');
+  if(btn) btn.disabled = true;
+  setPmStatus('loading', `🔄 讀取 ${PH_MONITOR_ITEMS.length} 個項目分頁…`);
+
+  const results = await Promise.all(PH_MONITOR_ITEMS.map(function(item) {
+    return fetchProcessSheetRaw(sheetId, item.tab)
+      .then(function(rows) {
+        const parsed = parsePhMonitorRows(rows);
+        return Object.assign({ key:item.key, name:item.name, tab:item.tab, error:null }, parsed);
+      })
+      .catch(function(err) {
+        return { key:item.key, name:item.name, tab:item.tab, series:[], lsl:null, usl:null, error:err.message };
+      });
+  }));
+
+  PH_MONITOR_DATA = {};
+  results.forEach(function(r) { PH_MONITOR_DATA[r.key] = r; });
+
+  const failed = results.filter(function(r) { return r.error || !r.series.length; });
+  const totalPoints = results.reduce(function(a, r) { return a + r.series.length; }, 0);
+
+  if(failed.length === results.length) {
+    pmConnected = false;
+    setPmStatus('err', '❌ 全部分頁讀取失敗，請確認 Sheet ID 正確、分頁名稱未變更，且試算表已設為「知道連結的使用者均可檢視」');
+    const badge = document.getElementById('pmConnBadge');
+    if(badge) badge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF4444;margin-right:4px"></span>連接失敗`;
+  } else {
+    PH_MONITOR_SHEET_ID = sheetId;
+    pmConnected = true;
+    try { localStorage.setItem(PH_MONITOR_LS_KEY, sheetId); } catch(e) {}
+    const badge = document.getElementById('pmConnBadge');
+    if(badge) badge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22C55E;margin-right:4px"></span>已連接（${results.length - failed.length}/${results.length} 個項目）`;
+    if(failed.length) {
+      setPmStatus('err', `⚠️ 已連接，共 ${totalPoints} 筆讀值；但 ${failed.map(function(f){return f.name;}).join('、')} 讀取失敗或無資料，請確認分頁名稱／內容`);
+    } else {
+      setPmStatus('ok', `✅ 已連接，共 ${totalPoints} 筆讀值（${PH_MONITOR_ITEMS.length} 個項目）`);
+    }
+  }
+  if(btn) btn.disabled = false;
+  renderPhMonitorPage();
+}
+
+function pmFmtVal(v) { return (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(2); }
+
+function renderPhMonitorSummary() {
+  const el = document.getElementById('pmSummaryRow');
+  if(!el) return;
+  el.innerHTML = PH_MONITOR_ITEMS.map(function(item) {
+    const d = PH_MONITOR_DATA[item.key];
+    if(!d || !d.series || !d.series.length) {
+      return `<div class="pm-summary-card">
+        <div class="pm-sc-title">${item.name}</div>
+        <div style="font-size:11.5px;color:#94A3B8;padding:8px 0">${d && d.error ? '讀取失敗：' + d.error : '尚無資料'}</div>
+      </div>`;
+    }
+    const series = d.series;
+    const last = series[series.length - 1];
+    const lsl = last.lsl != null ? last.lsl : d.lsl;
+    const usl = last.usl != null ? last.usl : d.usl;
+    const oos = (lsl != null && last.value < lsl) || (usl != null && last.value > usl);
+    let sinceReplaceLabel = '—';
+    for(let i = series.length - 1; i >= 0; i--) {
+      if(series[i].replaced) {
+        const daysAgo = (i === series.length - 1) ? 0 : Math.round((parseFlexDate(last.date) - parseFlexDate(series[i].date)) / 86400000);
+        sinceReplaceLabel = (daysAgo === 0 ? '今日' : daysAgo + ' 天前') + '（' + series[i].date + '）';
+        break;
+      }
+    }
+    return `<div class="pm-summary-card ${oos ? 'warn' : ''}">
+      <div class="pm-sc-title">${item.name}</div>
+      <div class="pm-sc-row"><span class="pm-sc-label">最新讀值</span><span class="pm-sc-val ${oos ? 'bad' : 'ok'}">${pmFmtVal(last.value)}</span></div>
+      <div class="pm-sc-spec">規格 LSL ${pmFmtVal(lsl)} ~ USL ${pmFmtVal(usl)}</div>
+      <div class="pm-sc-badge ${oos ? 'bad' : 'ok'}">${oos ? '⚠ 超出規格' : '✓ 正常'}</div>
+      <div class="pm-sc-foot">檢驗日：${last.date}　距上次更換：${sinceReplaceLabel}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPhMonitorCharts() {
+  const grid = document.getElementById('pmChartGrid');
+  if(!grid) return;
+
+  if(!pmConnected) {
+    grid.innerHTML = `<div class="ph-empty" style="grid-column:1/-1">尚未連接 pH 值監控 Google Sheet，請於上方輸入 Sheet ID 並按「連接並同步」</div>`;
+    return;
+  }
+
+  grid.innerHTML = PH_MONITOR_ITEMS.map(function(item) {
+    const d = PH_MONITOR_DATA[item.key];
+    const n = d && d.series ? d.series.length : 0;
+    return `<div class="pm-chart-card">
+      <div class="pm-chart-card-head">
+        <div>
+          <div class="pm-chart-card-title">${item.name}</div>
+          <div class="pm-chart-card-sub">來源分頁：${item.tab}</div>
+        </div>
+        <div class="pm-chart-card-sub">${n ? n + ' 筆讀值' : (d && d.error ? '讀取失敗' : '無資料')}</div>
+      </div>
+      <div class="pm-chart-wrap">${n ? `<canvas id="pmChart-${item.key}"></canvas>` : `<div class="ph-empty">${d && d.error ? ('讀取失敗：' + d.error) : '此分頁尚無有效讀值'}</div>`}</div>
+      ${n ? `<div class="pm-chart-legend-note">
+        <span><span class="pm-legend-dot" style="background:${PH_MONITOR_COLORS[PH_MONITOR_ITEMS.indexOf(item) % PH_MONITOR_COLORS.length]}"></span>pH 讀值</span>
+        <span><span class="pm-legend-dot" style="background:#B91C1C"></span>超出規格</span>
+        <span>▲ 更換事件</span>
+        <span style="color:#CBD5E1">┄ LSL / USL</span>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  PH_MONITOR_ITEMS.forEach(function(item, idx) {
+    const d = PH_MONITOR_DATA[item.key];
+    if(!d || !d.series || !d.series.length) return;
+    const canvas = document.getElementById('pmChart-' + item.key);
+    if(!canvas || typeof Chart === 'undefined') return;
+
+    const series = d.series;
+    const labels = series.map(function(p) { return fmtTimeShort(p.date); });
+    const vals = series.map(function(p) { return p.value; });
+    const color = PH_MONITOR_COLORS[idx % PH_MONITOR_COLORS.length];
+    const pointColors = series.map(function(p) {
+      const lsl = p.lsl != null ? p.lsl : d.lsl, usl = p.usl != null ? p.usl : d.usl;
+      const oos = (lsl != null && p.value < lsl) || (usl != null && p.value > usl);
+      return oos ? '#B91C1C' : color;
+    });
+    const pointRadius = series.map(function(p) {
+      const lsl = p.lsl != null ? p.lsl : d.lsl, usl = p.usl != null ? p.usl : d.usl;
+      const oos = (lsl != null && p.value < lsl) || (usl != null && p.value > usl);
+      return oos ? 5 : 2.5;
+    });
+    const uslLine = series.map(function(p) { return p.usl != null ? p.usl : d.usl; });
+    const lslLine = series.map(function(p) { return p.lsl != null ? p.lsl : d.lsl; });
+
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label:'pH 讀值', data:vals, borderColor:color, backgroundColor:color,
+            pointBackgroundColor:pointColors, pointBorderColor:pointColors, pointRadius:pointRadius,
+            borderWidth:1.75, tension:0.15 },
+          { label:'USL', data:uslLine, borderColor:'#CBD5E1', borderDash:[5,4], borderWidth:1, pointRadius:0 },
+          { label:'LSL', data:lslLine, borderColor:'#CBD5E1', borderDash:[5,4], borderWidth:1, pointRadius:0 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display:false },
+          tooltip: { callbacks: {
+            label: function(c) {
+              if(c.dataset.label !== 'pH 讀值') return `${c.dataset.label}: ${c.parsed.y == null ? '—' : c.parsed.y.toFixed(2)}`;
+              const p = series[c.dataIndex];
+              const lines = [`日期: ${p.date}`, `pH: ${p.value.toFixed(2)}`];
+              const lsl = p.lsl != null ? p.lsl : d.lsl, usl = p.usl != null ? p.usl : d.usl;
+              const oos = (lsl != null && p.value < lsl) || (usl != null && p.value > usl);
+              if(oos) lines.push('⚠ 超出規格');
+              if(p.inspector) lines.push('檢驗人員: ' + p.inspector);
+              if(p.replaced) lines.push('▲ 當日更換藥液' + (p.replacedBy ? '（' + p.replacedBy + '）' : '') + (p.replacedNote ? '：' + p.replacedNote : ''));
+              return lines;
+            },
+          }},
+        },
+        scales: {
+          x: { ticks:{font:{size:9}, maxRotation:45, autoSkip:true, maxTicksLimit:10} },
+          y: { ticks:{font:{size:10}} },
+        },
+      },
+      plugins: [{
+        id: 'pmReplaceMarkers',
+        afterDatasetsDraw: function(chart) {
+          const ctx = chart.ctx, scales = chart.scales;
+          series.forEach(function(p, i) {
+            if(!p.replaced) return;
+            const x = scales.x.getPixelForValue(i);
+            const yTop = scales.y.top;
+            ctx.save();
+            ctx.fillStyle = '#EA580C';
+            ctx.beginPath();
+            ctx.moveTo(x - 4, yTop + 2);
+            ctx.lineTo(x + 4, yTop + 2);
+            ctx.lineTo(x, yTop + 9);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          });
+        },
+      }],
+    });
+  });
+}
+
+function renderPhMonitorPage() {
+  renderPhMonitorSummary();
+  renderPhMonitorCharts();
+}
+
+// 開場自動嘗試連接（若之前連接過，Sheet ID 會存在本機瀏覽器）
+document.addEventListener('DOMContentLoaded', function() {
+  let saved = '';
+  try { saved = localStorage.getItem(PH_MONITOR_LS_KEY) || ''; } catch(e) {}
+  const idEl = document.getElementById('pmSheetId');
+  if(idEl && saved) {
+    idEl.value = saved;
+    connectPhMonitorSheet();
+  }
 });
 
 /* ══════════════════════════════════════════════════════════════════════════
