@@ -2571,9 +2571,12 @@ function clearExcluded() {
   excludedPoints[exKey] = new Set();
   update();
 }
-// 點擊圖表點時呼叫：切換該點的排除狀態
+// 點擊圖表點時呼叫：切換該點的排除狀態（單一項目檢視，用目前選擇的 sheet+metric 當 key）
 function toggleExcludePoint(dataPoint) {
-  const exKey = curFilterKey();
+  toggleExcludePointWithKey(curFilterKey(), dataPoint);
+}
+// 同上，但可指定任意 exKey（例如「全部」總覽中某一張小圖對應的 metric）
+function toggleExcludePointWithKey(exKey, dataPoint) {
   if(!excludedPoints[exKey]) excludedPoints[exKey] = new Set();
   const k = pointKey(dataPoint);
   if(excludedPoints[exKey].has(k)) excludedPoints[exKey].delete(k);
@@ -2753,25 +2756,33 @@ function renderAllMetricsCharts(sheetIdx) {
       const metaEl = card.querySelector('#meta_' + m.key);
       const rawSeries = getSeriesData(sheetIdx, m.key);
       const exKey = sheetIdx + '|' + m.key;
-      const { kept } = applySeriesFilterFor(rawSeries, exKey);
+      const { kept, excluded } = applySeriesFilterFor(rawSeries, exKey);
       if(!kept.length) {
         metaEl.textContent = '無資料';
         return;
       }
       const spc = calcSPC(kept);
       const customLim = getLim(sheetIdx, m.key);
-      const activeUCL = customLim ? customLim.hi : spc.UCL;
-      const activeLCL = customLim ? customLim.lo : spc.LCL;
+      // 與單一項目檢視一致：依目前選擇的界限模式（統計/自訂）決定生效界限，
+      // 而非只要有自訂值就強制套用 —— 這是先前 R1 誤判同一類問題，此處一併修正。
+      const useCustom = mode === 'custom';
+      const activeUCL = (useCustom && customLim) ? customLim.hi : spc.UCL;
+      const activeLCL = (useCustom && customLim) ? customLim.lo : spc.LCL;
       const vals = kept.map(x => parseFloat(x.value.toFixed(3)));
       const labels = kept.map(x => x.batch);
       const oocCount = vals.filter(v => v > activeUCL || v < activeLCL).length;
-      metaEl.innerHTML = `樣本數 ${kept.length}｜UCL ${activeUCL.toFixed(2)}｜LCL ${activeLCL.toFixed(2)}｜管制外 <span style="font-weight:700;color:${oocCount ? '#B91C1C' : '#15803D'}">${oocCount}</span>`;
+      const exCount = excluded.length;
+      metaEl.innerHTML = `樣本數 ${kept.length}｜UCL ${activeUCL.toFixed(2)}｜LCL ${activeLCL.toFixed(2)}｜管制外 <span style="font-weight:700;color:${oocCount ? '#B91C1C' : '#15803D'}">${oocCount}</span>`
+        + (exCount ? `｜<span style="color:#92400E">已排除 ${exCount}</span>` : '');
 
       const pointColors = vals.map(v => (v > activeUCL || v < activeLCL) ? '#E24B4A' : '#1D9E75');
+      const pointRadii  = vals.map(v => (v > activeUCL || v < activeLCL) ? 4 : 2.5);
+      const pointBorders = vals.map(v => (v > activeUCL || v < activeLCL) ? '#B91C1C' : '#1D9E75');
       const cfg = {
         type: 'line',
         data: { labels, datasets: [
-          {label:'量測值', data:vals, borderColor:'#2563EB', backgroundColor:pointColors, pointBackgroundColor:pointColors, pointRadius:2.5, tension:0.15, borderWidth:1.5},
+          {label:'量測值', data:vals, borderColor:'#2563EB', backgroundColor:pointColors, pointBackgroundColor:pointColors,
+           pointBorderColor:pointBorders, pointBorderWidth:1.5, pointRadius:pointRadii, pointHoverRadius:6, tension:0.15, borderWidth:1.5},
           {label:'UCL', data:Array(vals.length).fill(parseFloat(activeUCL.toFixed(3))), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0},
           {label:'CL',  data:Array(vals.length).fill(parseFloat(spc.mean.toFixed(3))),  borderColor:'#888780', borderDash:[3,3], borderWidth:1, pointRadius:0},
           {label:'LCL', data:Array(vals.length).fill(parseFloat(activeLCL.toFixed(3))), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0},
@@ -2780,12 +2791,33 @@ function renderAllMetricsCharts(sheetIdx) {
           responsive:true, maintainAspectRatio:false,
           plugins:{legend:{display:false}, tooltip:{callbacks:{
             title: ctx => kept[ctx[0].dataIndex] ? kept[ctx[0].dataIndex].batch : '',
-            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}`
+            label: ctx => {
+              if(ctx.dataset.label !== '量測值') return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}`;
+              const v = ctx.parsed.y;
+              const lines = [`量測值: ${v.toFixed(3)}`];
+              if(v > activeUCL || v < activeLCL) lines.push('⚠ 超出管制界限');
+              return lines;
+            }
           }}},
           scales:{
             x:{ticks:{display:false}},
             y:{ticks:{font:{size:9}}}
           }
+        }
+      };
+      // ── 排除模式：點擊此小圖表的點即排除/還原該點（與單一項目檢視相同邏輯，
+      //    但每張小圖用自己的 metric key 存排除狀態，彼此獨立）──
+      const _keptForClick = kept;
+      cfg.options.onClick = function(evt, elements) {
+        if(!excludeMode) return;
+        if(!elements || !elements.length) return;
+        const idx = elements[0].index;
+        const d = _keptForClick[idx];
+        if(d) toggleExcludePointWithKey(exKey, {batch:d.batch, date:d.date});
+      };
+      cfg.options.onHover = function(evt, elements) {
+        if(excludeMode && evt.native && evt.native.target) {
+          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
         }
       };
       const canvas = document.getElementById(canvasId);
@@ -2807,6 +2839,11 @@ function update() {
     document.querySelectorAll('.single-metric-only').forEach(el => el.style.display = 'none');
     const allWrap = document.getElementById('allMetricsWrap');
     if(allWrap) allWrap.style.display = '';
+    // 頂部「已排除」提示是針對單一項目的彙總，在「全部」總覽下改由各小圖自己顯示，
+    // 避免殘留上一個單一項目的舊數字造成混淆。
+    document.getElementById('excludedCount').style.display = 'none';
+    document.getElementById('clearExclBtn').style.display = 'none';
+    document.getElementById('excludedList').style.display = 'none';
     renderAllMetricsCharts(sheetIdx);
     return;
   }
