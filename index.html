@@ -404,7 +404,11 @@ body{font-family:var(--font-sans)}
 .oc-final-note .save-btn{margin-top:10px;height:34px;padding:0 18px;font-size:12.5px;font-weight:700;border-radius:6px;border:none;background:#2563EB;color:#fff;cursor:pointer}
 .oc-final-note .save-hint{font-size:11px;color:#94A3B8;margin-top:6px}
 
-.ph-param-list{max-height:110px;overflow-y:auto;overflow-x:hidden;border:1px solid #CBD5E1;border-radius:6px;background:#fff;padding:4px 2px}
+.ph-param-list{max-height:340px;overflow-y:auto;overflow-x:hidden;border:1px solid #CBD5E1;border-radius:6px;background:#fff;padding:8px}
+.cmp-param-groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 18px;align-items:start}
+.cmp-param-group{border-radius:6px}
+.cmp-param-group-header{border-bottom:1px solid #EEF2F7;margin-bottom:2px}
+.cmp-param-group-header input[type=checkbox]{width:14px;height:14px;accent-color:#2563EB;cursor:pointer}
 .ph-param-row{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:4px 8px;font-size:12px;color:#1E293B;border-radius:4px}
 .ph-param-row:hover{background:#F1F5F9}
 .ph-param-row label{flex:1 1 auto;min-width:0;cursor:pointer;display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px}
@@ -1225,10 +1229,6 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
           <label>量測項目</label>
           <select id="cmpMetricSel"></select>
         </div>
-        <div class="ph-connect-field" style="flex:2;min-width:280px">
-          <label>前期指標參數（勾選多個；欄位旁 ✕ 可永久隱藏誤判/不需要的欄位）</label>
-          <div id="cmpParamList" class="ph-param-list"></div>
-        </div>
         <div class="ph-connect-field" style="flex:0 0 140px">
           <label>開始日期</label>
           <input type="date" id="cmpFrom">
@@ -1238,6 +1238,10 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
           <input type="date" id="cmpTo">
         </div>
         <button class="ph-connect-btn" onclick="renderCompare()">產生比對圖</button>
+      </div>
+      <div class="ph-connect-field" style="margin-top:10px;width:100%">
+        <label>前期指標參數（依站別分組；每組標題可一鍵全選/取消整組，欄位旁 ✕ 可永久隱藏誤判/不需要的欄位）</label>
+        <div id="cmpParamList" class="ph-param-list"></div>
       </div>
       <div id="cmpSummary" style="font-size:12px;color:#64748B;margin-top:10px"></div>
       <div id="cmpHiddenNote" style="font-size:11px;color:#94A3B8;margin-top:4px"></div>
@@ -5122,18 +5126,37 @@ function renderCompareParamList() {
   if(!options.length) {
     listEl.innerHTML = '<div class="ph-param-empty">尚無可比對的前期參數，請先於「🔗 製程履歷」連接 Google Sheet。</div>';
   } else {
-    const rowsHtml = options.map(function(o) {
-      const checked = hasPrev ? prevChecked.has(o.key) : !CMP_DEFAULT_UNCHECKED_STATIONS.has(o.station);
-      return `<div class="ph-param-row">
-          <label><input type="checkbox" class="cmp-param-cb" value="${o.key}" ${checked?'checked':''}><span class="ph-param-text">${o.station}｜${o.param}</span></label>
-          <button type="button" class="ph-param-hide-btn" title="永久隱藏此欄位（例如來源表誤填/殘留值）" onclick="event.stopPropagation();hideProcessParam('${escAttr(o.key)}')">✕</button>
+    // ── 依站別分組：每組標題可一鍵全選/全不選整組，底下才是個別參數 ──
+    const stationOrder = [];
+    const byStation = {};
+    options.forEach(function(o) {
+      if(!byStation[o.station]) { byStation[o.station] = []; stationOrder.push(o.station); }
+      byStation[o.station].push(o);
+    });
+    const groupsHtml = stationOrder.map(function(station) {
+      const items = byStation[station];
+      const rows = items.map(function(o) {
+        const checked = hasPrev ? prevChecked.has(o.key) : !CMP_DEFAULT_UNCHECKED_STATIONS.has(o.station);
+        return `<div class="ph-param-row cmp-param-row" style="padding-left:20px">
+            <label><input type="checkbox" class="cmp-param-cb" data-station="${escAttr(station)}" value="${o.key}" ${checked?'checked':''} onchange="updateCompareGroupHeaderState('${escAttr(station)}')"><span class="ph-param-text">${o.param}</span></label>
+            <button type="button" class="ph-param-hide-btn" title="永久隱藏此欄位（例如來源表誤填/殘留值）" onclick="event.stopPropagation();hideProcessParam('${escAttr(o.key)}')">✕</button>
+          </div>`;
+      }).join('');
+      return `<div class="cmp-param-group" style="margin-bottom:4px">
+          <div class="cmp-param-group-header" style="display:flex;align-items:center;gap:6px;padding:2px 0">
+            <input type="checkbox" class="cmp-group-cb" data-station="${escAttr(station)}" onchange="toggleCompareGroupChecked('${escAttr(station)}', this.checked)">
+            <b style="font-size:11.5px;color:#334155">${station}</b>
+            <span style="font-size:10.5px;color:#94A3B8">(${items.length})</span>
+          </div>
+          ${rows}
         </div>`;
     }).join('');
     const toolbar = `<div class="ph-param-toolbar" style="display:flex;gap:10px;margin-bottom:6px">
-        <a href="#" onclick="event.preventDefault();setAllCompareParamsChecked(true)" style="font-size:11px;color:#2563EB">全選</a>
+        <a href="#" onclick="event.preventDefault();setAllCompareParamsChecked(true)" style="font-size:11px;color:#2563EB">全選（所有站別）</a>
         <a href="#" onclick="event.preventDefault();setAllCompareParamsChecked(false)" style="font-size:11px;color:#2563EB">全不選</a>
       </div>`;
-    listEl.innerHTML = toolbar + rowsHtml;
+    listEl.innerHTML = toolbar + `<div class="cmp-param-groups-grid">${groupsHtml}</div>`;
+    stationOrder.forEach(function(station) { updateCompareGroupHeaderState(station); });
   }
   const hiddenNote = document.getElementById('cmpHiddenNote');
   if(hiddenNote) {
@@ -5145,6 +5168,22 @@ function renderCompareParamList() {
 
 function setAllCompareParamsChecked(checked) {
   document.querySelectorAll('#cmpParamList .cmp-param-cb').forEach(function(cb){ cb.checked = checked; });
+  document.querySelectorAll('#cmpParamList .cmp-group-cb').forEach(function(cb){ cb.checked = checked; cb.indeterminate = false; });
+}
+
+// 站別群組標題的「全選本站」勾選框：一鍵勾/取消該站別底下所有參數
+function toggleCompareGroupChecked(station, checked) {
+  document.querySelectorAll('#cmpParamList .cmp-param-cb[data-station="' + CSS.escape(station) + '"]').forEach(function(cb){ cb.checked = checked; });
+  updateCompareGroupHeaderState(station);
+}
+// 依該站別目前個別勾選狀態，更新群組標題勾選框（全勾/全不勾/部分勾＝indeterminate）
+function updateCompareGroupHeaderState(station) {
+  const cbs = Array.from(document.querySelectorAll('#cmpParamList .cmp-param-cb[data-station="' + CSS.escape(station) + '"]'));
+  const groupCb = document.querySelector('#cmpParamList .cmp-group-cb[data-station="' + CSS.escape(station) + '"]');
+  if(!groupCb || !cbs.length) return;
+  const checkedCount = cbs.filter(function(cb){ return cb.checked; }).length;
+  groupCb.checked = checkedCount === cbs.length;
+  groupCb.indeterminate = checkedCount > 0 && checkedCount < cbs.length;
 }
 
 function getCompareSelectedParamKeys() {
