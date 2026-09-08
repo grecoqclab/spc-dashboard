@@ -405,10 +405,11 @@ body{font-family:var(--font-sans)}
 .oc-final-note .save-hint{font-size:11px;color:#94A3B8;margin-top:6px}
 
 .ph-param-list{max-height:340px;overflow-y:auto;overflow-x:hidden;border:1px solid #CBD5E1;border-radius:6px;background:#fff;padding:8px}
-.cmp-param-groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 18px;align-items:start}
+.cmp-param-groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:2px 18px;align-items:start}
 .cmp-param-group{border-radius:6px}
 .cmp-param-group-header{border-bottom:1px solid #EEF2F7;margin-bottom:2px}
 .cmp-param-group-header input[type=checkbox]{width:14px;height:14px;accent-color:#2563EB;cursor:pointer}
+.cmp-param-group-body .ph-param-row{padding-left:20px}
 .ph-param-row{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:4px 8px;font-size:12px;color:#1E293B;border-radius:4px}
 .ph-param-row:hover{background:#F1F5F9}
 .ph-param-row label{flex:1 1 auto;min-width:0;cursor:pointer;display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px}
@@ -419,6 +420,12 @@ body{font-family:var(--font-sans)}
 .ph-param-empty{font-size:12px;color:#94A3B8;font-style:italic;padding:8px 10px}
 
 .cmp-mark-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:12px;background:#FCE7F3;color:#9D174D;font-weight:600;white-space:nowrap}
+
+/* 前期指標比對：比對圖依站別分組，一站一整行，站內圖表橫向排列（跟「全部」總覽的分組風格一致） */
+.cmp-station-section{margin-bottom:1.25rem}
+.cmp-station-header{font-size:13px;font-weight:700;color:#1D4ED8;margin-bottom:8px}
+.cmp-station-charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;align-items:start}
+.cmp-station-charts-grid .chart-card{margin-bottom:0}
 .cmp-mark-chip button{border:none;background:transparent;color:#9D174D;cursor:pointer;font-size:12px;line-height:1;padding:0;font-weight:700}
 .cmp-mark-chip button:hover{color:#DB2777}
 
@@ -5112,6 +5119,18 @@ function getCompareParamOptions() {
   return processOpts.concat(phOpts);
 }
 
+// 解析一個「前期指標」勾選 key，統一回傳 {isPh, station, param, phItemKey}；
+// renderCompare() 的分組排版跟數值比對都靠這個共用邏輯，避免兩處各自解析而不一致。
+function parseCompareKey(key) {
+  if(key.indexOf('PH::') === 0) {
+    const itemKey = key.slice(4);
+    const item = PH_MONITOR_ITEMS.find(function(it){ return it.key === itemKey; });
+    return { isPh:true, station: PH_COMPARE_STATION_LABEL, param: item ? item.name : itemKey, phItemKey: itemKey };
+  }
+  const parts = key.split('::');
+  return { isPh:false, station: parts[0], param: parts[1], phItemKey: null };
+}
+
 // 首次帶出清單（尚無使用者自訂勾選紀錄）時，預設「全選」，
 // 但以下站別因為經常誤判/不需要比對，預設不勾選（使用者仍可自行手動勾選）：
 const CMP_DEFAULT_UNCHECKED_STATIONS = new Set(['銅板前處理(酸洗+水洗)', '膠液塗佈']);
@@ -5137,18 +5156,18 @@ function renderCompareParamList() {
       const items = byStation[station];
       const rows = items.map(function(o) {
         const checked = hasPrev ? prevChecked.has(o.key) : !CMP_DEFAULT_UNCHECKED_STATIONS.has(o.station);
-        return `<div class="ph-param-row cmp-param-row" style="padding-left:20px">
+        return `<div class="ph-param-row cmp-param-row">
             <label><input type="checkbox" class="cmp-param-cb" data-station="${escAttr(station)}" value="${o.key}" ${checked?'checked':''} onchange="updateCompareGroupHeaderState('${escAttr(station)}')"><span class="ph-param-text">${o.param}</span></label>
             <button type="button" class="ph-param-hide-btn" title="永久隱藏此欄位（例如來源表誤填/殘留值）" onclick="event.stopPropagation();hideProcessParam('${escAttr(o.key)}')">✕</button>
           </div>`;
       }).join('');
-      return `<div class="cmp-param-group" style="margin-bottom:4px">
-          <div class="cmp-param-group-header" style="display:flex;align-items:center;gap:6px;padding:2px 0">
+      return `<div class="cmp-param-group">
+          <div class="cmp-param-group-header" style="display:flex;align-items:center;gap:6px">
             <input type="checkbox" class="cmp-group-cb" data-station="${escAttr(station)}" onchange="toggleCompareGroupChecked('${escAttr(station)}', this.checked)">
             <b style="font-size:11.5px;color:#334155">${station}</b>
             <span style="font-size:10.5px;color:#94A3B8">(${items.length})</span>
           </div>
-          ${rows}
+          <div class="cmp-param-group-body">${rows}</div>
         </div>`;
     }).join('');
     const toolbar = `<div class="ph-param-toolbar" style="display:flex;gap:10px;margin-bottom:6px">
@@ -5284,13 +5303,28 @@ function renderCompare() {
     return;
   }
 
-  let html = '';
+  // 圖表依站別分組排版（一站一整行、站內圖表橫向排列），跟「前期指標參數」勾選清單、
+  // 以及「全部」檢驗項目總覽的分組風格一致，方便對照同一站別的多個參數。
+  const chartGroupOrder = [];
+  const chartGroupMap = {};
   selectedKeys.forEach(function(key, ci) {
-    const parts = key.split('::'), station = parts[0], param = parts[1];
-    html += `<div class="chart-card">
-        <div class="chart-title">「${param}」（${station}） vs 量測值 比對</div>
-        <div class="chart-wrap" style="height:200px"><canvas id="cmpChart${ci}"></canvas></div>
-        <div id="cmpNote${ci}" style="font-size:11px;color:#64748B;margin-top:8px"></div>
+    const station = parseCompareKey(key).station;
+    if(!chartGroupMap[station]) { chartGroupMap[station] = []; chartGroupOrder.push(station); }
+    chartGroupMap[station].push(ci);
+  });
+  let html = '';
+  chartGroupOrder.forEach(function(station) {
+    const cardsHtml = chartGroupMap[station].map(function(ci) {
+      const param = parseCompareKey(selectedKeys[ci]).param;
+      return `<div class="chart-card">
+          <div class="chart-title">「${param}」 vs 量測值 比對</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="cmpChart${ci}"></canvas></div>
+          <div id="cmpNote${ci}" style="font-size:11px;color:#64748B;margin-top:8px"></div>
+        </div>`;
+    }).join('');
+    html += `<div class="cmp-station-section">
+        <div class="cmp-station-header">${station}</div>
+        <div class="cmp-station-charts-grid">${cardsHtml}</div>
       </div>`;
   });
   html += `<div class="chart-card">
@@ -5300,10 +5334,8 @@ function renderCompare() {
   chartsEl.innerHTML = html;
 
   selectedKeys.forEach(function(key, ci) {
-    const isPh = key.indexOf('PH::') === 0;
-    const station = isPh ? PH_COMPARE_STATION_LABEL : key.split('::')[0];
-    const param = isPh ? (PH_MONITOR_ITEMS.find(function(it){return it.key===key.slice(4);}) || {}).name || key.slice(4) : key.split('::')[1];
-    const phItemKey = isPh ? key.slice(4) : null;
+    const parsed = parseCompareKey(key);
+    const isPh = parsed.isPh, station = parsed.station, param = parsed.param, phItemKey = parsed.phItemKey;
     const pts = matched.map(function(mm) {
       let pv = null;
       if(isPh) {
