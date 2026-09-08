@@ -497,6 +497,7 @@ body{font-family:var(--font-sans)}
   <!-- ── Chart Analysis Tab ── -->
   <div class="tab-page active" id="tabChart">
 
+  <div class="single-metric-only">
   <div class="mode-bar">
     <button class="mode-btn active" id="btnStat" onclick="setMode('stat')">統計管制界限 (±3σ)</button>
     <button class="mode-btn" id="btnCustom" onclick="setMode('custom')">自訂管制界限</button>
@@ -549,6 +550,9 @@ body{font-family:var(--font-sans)}
   </div>
 
   <!-- ── Google Sheets 資料庫設定面板 ── -->
+  </div>
+  <!-- /single-metric-only -->
+
   <div class="custom-panel" id="gsDbPanel" style="background:#F0F9FF;border:1.5px solid #BAE6FD;margin-bottom:1rem">
     <div class="custom-panel-header" style="margin-bottom:10px">
       <div>
@@ -670,6 +674,7 @@ function doGet(e) {
     <div id="excludedList" style="margin-top:10px;display:none"></div>
   </div>
 
+  <div class="single-metric-only">
   <div class="metrics" id="metricCards"></div>
 
   <div class="chart-card">
@@ -678,15 +683,10 @@ function doGet(e) {
     <div class="legend" id="xLegend"></div>
     <div class="chart-violations" id="chartViolations" style="display:none"></div>
   </div>
-
-  <div class="chart-card">
-    <div class="chart-title">移動全距管制圖 (MR Chart)</div>
-    <div class="chart-wrap"><canvas id="mrChart"></canvas></div>
-    <div class="legend">
-      <span><span class="legend-dot" style="background:#1D9E75;height:2px"></span>移動全距</span>
-      <span><span class="legend-dot" style="background:#E24B4A"></span>UCL-MR</span>
-    </div>
   </div>
+  <!-- /single-metric-only -->
+
+  <div class="all-metrics-only" id="allMetricsWrap" style="display:none"></div>
 
   </div><!-- /tabChart -->
 
@@ -2125,7 +2125,8 @@ const METRICS = [
 
 const d2 = 1.128;
 let mode = 'stat';
-let xChartInst = null, mrChartInst = null;
+let xChartInst = null;
+let allChartInstances = [];
 let historyVisible = false;
 
 // customLimits[sheetIdx][metricKey] = {lo, hi}
@@ -2492,8 +2493,7 @@ function curFilterKey() {
 function pointKey(d) { return d.date + '##' + d.batch; }
 
 // 套用時間篩選 + 異常點排除，回傳 {kept, excluded}
-function applySeriesFilter(series) {
-  const exKey = curFilterKey();
+function applySeriesFilterFor(series, exKey) {
   const exSet = excludedPoints[exKey] || new Set();
   const from = filterState.from, to = filterState.to;
   const kept = [], excluded = [];
@@ -2505,6 +2505,9 @@ function applySeriesFilter(series) {
     kept.push(d);
   });
   return { kept, excluded };
+}
+function applySeriesFilter(series) {
+  return applySeriesFilterFor(series, curFilterKey());
 }
 
 function onFilterChange() {
@@ -2612,12 +2615,17 @@ function calcSPC(series) {
 
 function buildMetricOptions(sheetIdx) {
   const sel = document.getElementById('metricSel');
+  const prevVal = sel.value;
   sel.innerHTML = '';
+  const allOpt = document.createElement('option');
+  allOpt.value = 'ALL'; allOpt.textContent = '📊 全部（All）';
+  sel.appendChild(allOpt);
   METRICS.forEach(m => {
     const opt = document.createElement('option');
     opt.value = m.key; opt.textContent = m.label;
     sel.appendChild(opt);
   });
+  if(prevVal === 'ALL') sel.value = 'ALL';
 }
 
 function saveCustomLimit() {
@@ -2691,9 +2699,121 @@ function renderHistoryTable(sheetIdx, metricKey) {
   });
 }
 
+// ── 「全部」檢驗項目總覽：SST10 放左邊、SST14 放右邊、其他項目放最上方 ──
+function destroyAllMetricCharts() {
+  allChartInstances.forEach(c => { try { c.destroy(); } catch(e) {} });
+  allChartInstances = [];
+}
+
+function renderAllMetricsCharts(sheetIdx) {
+  destroyAllMetricCharts();
+  const wrap = document.getElementById('allMetricsWrap');
+  if(!wrap) return;
+
+  const otherMetrics = METRICS.filter(m => !m.key.includes('SST10') && !m.key.includes('SST14'));
+  const leftMetrics  = METRICS.filter(m => m.key.includes('SST10'));
+  const rightMetrics = METRICS.filter(m => m.key.includes('SST14'));
+
+  let html = '';
+  if(otherMetrics.length) {
+    html += `<div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#64748B;margin-bottom:8px">其他項目</div>
+      <div id="allGridOther"></div>
+    </div>`;
+  }
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#1D4ED8;margin-bottom:8px">🔵 SST10 系列</div>
+      <div id="allGridLeft"></div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#B45309;margin-bottom:8px">🟠 SST14 系列</div>
+      <div id="allGridRight"></div>
+    </div>
+  </div>`;
+  wrap.innerHTML = html;
+
+  const buildInto = (containerId, metrics) => {
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    if(!metrics.length) {
+      container.innerHTML = '<div style="font-size:12px;color:#94A3B8;padding:10px">（無項目）</div>';
+      return;
+    }
+    metrics.forEach(m => {
+      const canvasId = 'allChart_' + m.key;
+      const card = document.createElement('div');
+      card.className = 'chart-card';
+      card.style.marginBottom = '14px';
+      card.innerHTML = `<div class="chart-title">${m.label}</div>
+        <div class="chart-wrap" style="height:170px"><canvas id="${canvasId}"></canvas></div>
+        <div id="meta_${m.key}" style="font-size:11px;color:#64748B;margin-top:8px"></div>`;
+      container.appendChild(card);
+
+      const metaEl = card.querySelector('#meta_' + m.key);
+      const rawSeries = getSeriesData(sheetIdx, m.key);
+      const exKey = sheetIdx + '|' + m.key;
+      const { kept } = applySeriesFilterFor(rawSeries, exKey);
+      if(!kept.length) {
+        metaEl.textContent = '無資料';
+        return;
+      }
+      const spc = calcSPC(kept);
+      const customLim = getLim(sheetIdx, m.key);
+      const activeUCL = customLim ? customLim.hi : spc.UCL;
+      const activeLCL = customLim ? customLim.lo : spc.LCL;
+      const vals = kept.map(x => parseFloat(x.value.toFixed(3)));
+      const labels = kept.map(x => x.batch);
+      const oocCount = vals.filter(v => v > activeUCL || v < activeLCL).length;
+      metaEl.innerHTML = `樣本數 ${kept.length}｜UCL ${activeUCL.toFixed(2)}｜LCL ${activeLCL.toFixed(2)}｜管制外 <span style="font-weight:700;color:${oocCount ? '#B91C1C' : '#15803D'}">${oocCount}</span>`;
+
+      const pointColors = vals.map(v => (v > activeUCL || v < activeLCL) ? '#E24B4A' : '#1D9E75');
+      const cfg = {
+        type: 'line',
+        data: { labels, datasets: [
+          {label:'量測值', data:vals, borderColor:'#2563EB', backgroundColor:pointColors, pointBackgroundColor:pointColors, pointRadius:2.5, tension:0.15, borderWidth:1.5},
+          {label:'UCL', data:Array(vals.length).fill(parseFloat(activeUCL.toFixed(3))), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0},
+          {label:'CL',  data:Array(vals.length).fill(parseFloat(spc.mean.toFixed(3))),  borderColor:'#888780', borderDash:[3,3], borderWidth:1, pointRadius:0},
+          {label:'LCL', data:Array(vals.length).fill(parseFloat(activeLCL.toFixed(3))), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0},
+        ]},
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{
+            title: ctx => kept[ctx[0].dataIndex] ? kept[ctx[0].dataIndex].batch : '',
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}`
+          }}},
+          scales:{
+            x:{ticks:{display:false}},
+            y:{ticks:{font:{size:9}}}
+          }
+        }
+      };
+      const canvas = document.getElementById(canvasId);
+      if(canvas) allChartInstances.push(new Chart(canvas, cfg));
+    });
+  };
+
+  if(otherMetrics.length) buildInto('allGridOther', otherMetrics);
+  buildInto('allGridLeft', leftMetrics);
+  buildInto('allGridRight', rightMetrics);
+}
+
 function update() {
   const sheetIdx = parseInt(document.getElementById('sheetSel').value);
   const metricKey = document.getElementById('metricSel').value;
+
+  // ── 「全部」檢驗項目：切換到總覽多圖表版面 ──
+  if(metricKey === 'ALL') {
+    document.querySelectorAll('.single-metric-only').forEach(el => el.style.display = 'none');
+    const allWrap = document.getElementById('allMetricsWrap');
+    if(allWrap) allWrap.style.display = '';
+    renderAllMetricsCharts(sheetIdx);
+    return;
+  }
+  document.querySelectorAll('.single-metric-only').forEach(el => el.style.display = '');
+  const allWrapHide = document.getElementById('allMetricsWrap');
+  if(allWrapHide) allWrapHide.style.display = 'none';
+
   const m = METRICS.find(x=>x.key===metricKey);
   const rawSeries = getSeriesData(sheetIdx, metricKey);
   if(!rawSeries.length) return;
@@ -2703,13 +2823,11 @@ function update() {
   const series = kept;
   if(!series.length) {
     document.getElementById('metricCards').innerHTML = '<div style="padding:20px;color:#94A3B8;font-size:13px">篩選後無資料，請放寬時間範圍或還原排除點。</div>';
+
     // 清空舊圖表，避免顯示過期資料
     if(xChartInst){ xChartInst.destroy(); xChartInst = null; }
-    if(mrChartInst){ mrChartInst.destroy(); mrChartInst = null; }
     const xCanvas = document.getElementById('xChart');
-    const mrCanvas = document.getElementById('mrChart');
     if(xCanvas) xCanvas.getContext('2d').clearRect(0, 0, xCanvas.width, xCanvas.height);
-    if(mrCanvas) mrCanvas.getContext('2d').clearRect(0, 0, mrCanvas.width, mrCanvas.height);
     document.getElementById('chartViolations').style.display = 'none';
     return;
   }
@@ -2871,32 +2989,9 @@ function update() {
     }
   };
 
-  const mrVals = spc.mrs.map(v=>parseFloat(v.toFixed(3)));
-  const mrLabels = labels.slice(1);
-  const mrColors = mrVals.map(v=>v>spc.UCL_MR?'#E24B4A':'#1D9E75');
-  const mrCfg = {
-    type:'line',
-    data:{labels:mrLabels, datasets:[
-      {label:'移動全距', data:mrVals, borderColor:'#1D9E75', backgroundColor:mrColors, pointBackgroundColor:mrColors, pointRadius:3, tension:0.1, borderWidth:1.5},
-      {label:'UCL-MR', data:Array(mrVals.length).fill(parseFloat(spc.UCL_MR.toFixed(3))), borderColor:'#E24B4A', borderDash:[5,4], borderWidth:1, pointRadius:0},
-      {label:'MR-bar', data:Array(mrVals.length).fill(parseFloat(spc.mrBar.toFixed(3))), borderColor:'#888780', borderDash:[4,3], borderWidth:1, pointRadius:0},
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}`}}},
-      scales:{
-        x:{ticks:{font:{size:10}, maxRotation:45, autoSkip:true, maxTicksLimit:15}},
-        y:{min:0, ticks:{font:{size:10}}}
-      }
-    }
-  };
-
   if(xChartInst){ xChartInst.destroy(); xChartInst = null; }
-  if(mrChartInst){ mrChartInst.destroy(); mrChartInst = null; }
   const xCanvas  = document.getElementById('xChart');
-  const mrCanvas = document.getElementById('mrChart');
   xCanvas.getContext('2d').clearRect(0, 0, xCanvas.width, xCanvas.height);
-  mrCanvas.getContext('2d').clearRect(0, 0, mrCanvas.width, mrCanvas.height);
   // ── 排除模式：點擊圖表點即排除/還原該點 ──
   if(!xCfg.options) xCfg.options = {};
   const _seriesForClick = series;
@@ -2913,7 +3008,6 @@ function update() {
     }
   };
   xChartInst  = new Chart(xCanvas,  xCfg);
-  mrChartInst = new Chart(mrCanvas, mrCfg);
 
   // ── Render inline violation list under X chart ──────────────────────
   const cvDiv = document.getElementById('chartViolations');
