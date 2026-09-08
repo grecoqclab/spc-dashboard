@@ -497,12 +497,13 @@ body{font-family:var(--font-sans)}
   <!-- ── Chart Analysis Tab ── -->
   <div class="tab-page active" id="tabChart">
 
-  <div class="single-metric-only">
+  <!-- 統計/自訂界限切換：兩種檢驗項目檢視（單一／全部）都要能選，故不放進 single-metric-only -->
   <div class="mode-bar">
     <button class="mode-btn active" id="btnStat" onclick="setMode('stat')">統計管制界限 (±3σ)</button>
     <button class="mode-btn" id="btnCustom" onclick="setMode('custom')">自訂管制界限</button>
   </div>
 
+  <div class="single-metric-only">
   <!-- Custom limit input panel (hidden in stat mode) -->
   <div class="custom-panel" id="customPanel" style="display:none">
     <div class="custom-panel-header">
