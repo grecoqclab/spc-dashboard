@@ -663,6 +663,11 @@ function doGet(e) {
       <button onclick="quickRange(30)" class="qr-btn" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#fff;color:#475569;cursor:pointer">近30天</button>
       <button onclick="quickRange(90)" class="qr-btn" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#fff;color:#475569;cursor:pointer">近90天</button>
       <button onclick="clearFilter()" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#F8FAFC;color:#475569;cursor:pointer">清除篩選</button>
+      <div style="display:flex;align-items:center;gap:6px;padding-left:10px;border-left:1px dashed #E2E8F0">
+        <label style="font-size:12px;color:#64748B" title="此日期（含）之後的資料標示為「本週資料」，之前標示為「基準期資料」（僅圖表背景分區顯示，不影響管制界限計算）">本週分界日</label>
+        <input type="date" id="weeklySplitDate" onchange="onWeeklySplitChange()" style="height:30px;font-size:12px;border:1px solid #CBD5E1;border-radius:5px;padding:0 6px">
+        <button onclick="clearWeeklySplit()" style="height:28px;padding:0 10px;font-size:11px;border:1px solid #CBD5E1;border-radius:5px;background:#fff;color:#475569;cursor:pointer">清除分界</button>
+      </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
         <label style="font-size:12px;color:#64748B;display:flex;align-items:center;gap:5px;cursor:pointer">
           <input type="checkbox" id="excludeMode" onchange="toggleExcludeMode()" style="cursor:pointer">
@@ -2106,8 +2111,8 @@ function rebuildSheetSelectors() {
 
 const METRICS = [
   {key:'TTC', label:'TTC', extract: r=>[r['TTC time (sec)'] ?? r.TTC]},
-  {key:'SST10', label:'SST10 (厚度)', extract: r=>[r.SST10 ?? r.Thickness]},
-  {key:'SST14', label:'SST14 (厚度)', extract: r=>[r.SST14]},
+  {key:'SST10', label:'SST10', extract: r=>[r.SST10 ?? r.Thickness]},
+  {key:'SST14', label:'SST14', extract: r=>[r.SST14]},
   {key:'Via_11_SST10', label:'Via (1:1) SST10', extract: r=>[r['Via (1:1)\nSST10 (1)'] ?? r.Via_11_SST10_1, r['Via (1:1)\nSST10 (2)'] ?? r.Via_11_SST10_2]},
   {key:'Via_11_SST14', label:'Via (1:1) SST14', extract: r=>[r['Via (1:1)\nSST14 (1)'] ?? r.Via_11_SST14_1, r['Via (1:1)\nSST14 (2)'] ?? r.Via_11_SST14_2]},
   {key:'Via_21_SST10', label:'Via (2:1) SST10', extract: r=>[r['Via (2:1)\nSST10 (1)'] ?? r.Via_21_SST10_1, r['Via (2:1)\nSST10 (2)'] ?? r.Via_21_SST10_2]},
@@ -2486,6 +2491,68 @@ let excludeMode = false;
 // 排除點：key = sheetIdx|metricKey，value = Set(batch+date 組成的唯一鍵)
 let excludedPoints = {};
 
+// ── 「本週分界日」：純顯示用的背景分區（基準期 vs 本週資料），不影響管制界限計算 ──
+const WEEKLY_SPLIT_LS_KEY = 'wbr_weeklySplitDate';
+let weeklySplitDate = null; // 'YYYY-MM-DD' 或 null（未設定時不顯示分區背景）
+(function loadWeeklySplitDate() {
+  try {
+    const saved = localStorage.getItem(WEEKLY_SPLIT_LS_KEY);
+    if(saved) weeklySplitDate = saved;
+  } catch(e) { /* ignore */ }
+})();
+document.addEventListener('DOMContentLoaded', function() {
+  const el = document.getElementById('weeklySplitDate');
+  if(el && weeklySplitDate) el.value = weeklySplitDate;
+});
+function onWeeklySplitChange() {
+  const v = document.getElementById('weeklySplitDate').value || null;
+  weeklySplitDate = v;
+  try {
+    if(v) localStorage.setItem(WEEKLY_SPLIT_LS_KEY, v);
+    else localStorage.removeItem(WEEKLY_SPLIT_LS_KEY);
+  } catch(e) { /* ignore */ }
+  update();
+}
+function clearWeeklySplit() {
+  weeklySplitDate = null;
+  document.getElementById('weeklySplitDate').value = '';
+  try { localStorage.removeItem(WEEKLY_SPLIT_LS_KEY); } catch(e) { /* ignore */ }
+  update();
+}
+// 依目前分界日，找出「本週資料」在 series 裡開始的 index；
+// 傳回 -1 表示這段資料裡沒有分界點可畫（全部都是基準期，或全部都是本週）。
+function weeklySplitIndex(series) {
+  if(!weeklySplitDate || !series || !series.length) return -1;
+  const idx = series.findIndex(function(d){ return d.date && d.date >= weeklySplitDate; });
+  if(idx <= 0 || idx >= series.length) return -1;
+  return idx;
+}
+// 產生一個 Chart.js plugin：在圖表背景畫出「基準期資料」／「本週資料」兩個色塊
+function makeWeeklySplitPlugin(series) {
+  return {
+    id: 'weeklySplitBands',
+    beforeDatasetsDraw: function(chart) {
+      const splitIdx = weeklySplitIndex(series);
+      if(splitIdx < 0) return;
+      const { ctx, chartArea, scales } = chart;
+      if(!chartArea || !scales || !scales.x) return;
+      const boundaryX = (scales.x.getPixelForValue(splitIdx - 1) + scales.x.getPixelForValue(splitIdx)) / 2;
+      ctx.save();
+      ctx.fillStyle = 'rgba(37,99,235,0.07)';
+      ctx.fillRect(chartArea.left, chartArea.top, Math.max(0, boundaryX - chartArea.left), chartArea.bottom - chartArea.top);
+      ctx.fillStyle = 'rgba(219,39,119,0.09)';
+      ctx.fillRect(boundaryX, chartArea.top, Math.max(0, chartArea.right - boundaryX), chartArea.bottom - chartArea.top);
+      ctx.restore();
+    }
+  };
+}
+// 分界圖例（僅在目前圖表確實有畫出分區時才顯示）
+function weeklySplitLegendHtml(series) {
+  if(weeklySplitIndex(series) < 0) return '';
+  return `<span><span class="legend-dot" style="background:rgba(37,99,235,0.35)"></span>基準期資料</span>
+    <span><span class="legend-dot" style="background:rgba(219,39,119,0.4)"></span>本週資料</span>`;
+}
+
 function curFilterKey() {
   const sheetIdx = document.getElementById('sheetSel').value;
   const metricKey = document.getElementById('metricSel').value;
@@ -2774,7 +2841,8 @@ function renderAllMetricsCharts(sheetIdx) {
       const oocCount = vals.filter(v => v > activeUCL || v < activeLCL).length;
       const exCount = excluded.length;
       metaEl.innerHTML = `樣本數 ${kept.length}｜UCL ${activeUCL.toFixed(2)}｜LCL ${activeLCL.toFixed(2)}｜管制外 <span style="font-weight:700;color:${oocCount ? '#B91C1C' : '#15803D'}">${oocCount}</span>`
-        + (exCount ? `｜<span style="color:#92400E">已排除 ${exCount}</span>` : '');
+        + (exCount ? `｜<span style="color:#92400E">已排除 ${exCount}</span>` : '')
+        + (weeklySplitIndex(kept) >= 0 ? `｜<span style="color:#2563EB">■</span>基準期 <span style="color:#DB2777">■</span>本週` : '');
 
       const pointColors = vals.map(v => (v > activeUCL || v < activeLCL) ? '#E24B4A' : '#1D9E75');
       const pointRadii  = vals.map(v => (v > activeUCL || v < activeLCL) ? 4 : 2.5);
@@ -2804,7 +2872,8 @@ function renderAllMetricsCharts(sheetIdx) {
             x:{ticks:{display:false}},
             y:{ticks:{font:{size:9}}}
           }
-        }
+        },
+        plugins: [makeWeeklySplitPlugin(kept)]
       };
       // ── 排除模式：點擊此小圖表的點即排除/還原該點（與單一項目檢視相同邏輯，
       //    但每張小圖用自己的 metric key 存排除狀態，彼此獨立）──
@@ -2984,12 +3053,14 @@ function update() {
     xLegend.innerHTML = `
       <span><span class="legend-dot" style="background:#378ADD;height:2px"></span>量測值</span>
       <span><span class="legend-dot" style="background:#2563EB;height:1px;border-top:1.5px dashed #2563EB"></span>自訂 UCL/LCL</span>
-      <span><span class="legend-dot" style="background:#888780;height:1px;border-top:1px dashed #888780"></span>CL (中心線)</span>`;
+      <span><span class="legend-dot" style="background:#888780;height:1px;border-top:1px dashed #888780"></span>CL (中心線)</span>`
+      + weeklySplitLegendHtml(series);
   } else {
     xLegend.innerHTML = `
       <span><span class="legend-dot" style="background:#378ADD;height:2px"></span>量測值</span>
       <span><span class="legend-dot" style="background:#E24B4A;height:1px;border-top:1px dashed #E24B4A"></span>UCL/LCL</span>
-      <span><span class="legend-dot" style="background:#888780;height:1px;border-top:1px dashed #888780"></span>CL (中心線)</span>`;
+      <span><span class="legend-dot" style="background:#888780;height:1px;border-top:1px dashed #888780"></span>CL (中心線)</span>`
+      + weeklySplitLegendHtml(series);
   }
 
   const xCfg = {
@@ -3024,7 +3095,8 @@ function update() {
         x:{ticks:{font:{size:10}, maxRotation:45, autoSkip:true, maxTicksLimit:15}},
         y:{ticks:{font:{size:10}}}
       }
-    }
+    },
+    plugins: [makeWeeklySplitPlugin(series)]
   };
 
   if(xChartInst){ xChartInst.destroy(); xChartInst = null; }
@@ -4832,6 +4904,8 @@ async function connectPhMonitorSheet() {
   }
   if(btn) btn.disabled = false;
   renderPhMonitorPage();
+  // pH 監控資料現在也是「前期指標比對」可勾選的來源之一，連接狀態改變時一併刷新清單
+  if(typeof renderCompareParamList === 'function') renderCompareParamList();
 }
 
 function pmFmtVal(v) { return (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(2); }
@@ -5023,25 +5097,43 @@ function populateCompareSelectors() {
 
 // 前期指標比對用的參數清單：不含 TTC 站別（TTC板壓膜／TTC板顯影），僅用於此分頁下拉勾選；
 // 「🔗 製程履歷」分頁的樞紐表仍照 PROCESS_PARAM_OPTIONS 原樣顯示 TTC 欄位，不受影響。
+// 另外把「⚗️ 藥液pH監控」（若已連接）也併入清單，讓使用者可以跟製程參數一起勾選比對；
+// 這些項目用 key 前綴 "PH::" 標記，好讓 renderCompare() 用日期（而非 Batch）去比對數值。
+const PH_COMPARE_STATION_LABEL = '⚗️ 藥液pH監控';
 function getCompareParamOptions() {
-  return PROCESS_PARAM_OPTIONS.filter(function(o) { return !/TTC/i.test(o.station); });
+  const processOpts = PROCESS_PARAM_OPTIONS.filter(function(o) { return !/TTC/i.test(o.station); });
+  const phOpts = (pmConnected ? PH_MONITOR_ITEMS : [])
+    .map(function(item) { return { station: PH_COMPARE_STATION_LABEL, param: item.name, key: 'PH::' + item.key }; })
+    .filter(function(o) { return !PROCESS_HIDDEN_PARAMS.has(o.key); });
+  return processOpts.concat(phOpts);
 }
+
+// 首次帶出清單（尚無使用者自訂勾選紀錄）時，預設「全選」，
+// 但以下站別因為經常誤判/不需要比對，預設不勾選（使用者仍可自行手動勾選）：
+const CMP_DEFAULT_UNCHECKED_STATIONS = new Set(['銅板前處理(酸洗+水洗)', '膠液塗佈']);
 
 function renderCompareParamList() {
   const listEl = document.getElementById('cmpParamList');
   if(!listEl) return;
-  const prevChecked = new Set(getCompareSelectedParamKeys());
+  const prevKeys = getCompareSelectedParamKeys();
+  const hasPrev = document.querySelectorAll('#cmpParamList .cmp-param-cb').length > 0;
+  const prevChecked = new Set(prevKeys);
   const options = getCompareParamOptions();
   if(!options.length) {
     listEl.innerHTML = '<div class="ph-param-empty">尚無可比對的前期參數，請先於「🔗 製程履歷」連接 Google Sheet。</div>';
   } else {
-    listEl.innerHTML = options.map(function(o) {
-      const checked = prevChecked.size ? prevChecked.has(o.key) : false;
+    const rowsHtml = options.map(function(o) {
+      const checked = hasPrev ? prevChecked.has(o.key) : !CMP_DEFAULT_UNCHECKED_STATIONS.has(o.station);
       return `<div class="ph-param-row">
           <label><input type="checkbox" class="cmp-param-cb" value="${o.key}" ${checked?'checked':''}><span class="ph-param-text">${o.station}｜${o.param}</span></label>
           <button type="button" class="ph-param-hide-btn" title="永久隱藏此欄位（例如來源表誤填/殘留值）" onclick="event.stopPropagation();hideProcessParam('${escAttr(o.key)}')">✕</button>
         </div>`;
     }).join('');
+    const toolbar = `<div class="ph-param-toolbar" style="display:flex;gap:10px;margin-bottom:6px">
+        <a href="#" onclick="event.preventDefault();setAllCompareParamsChecked(true)" style="font-size:11px;color:#2563EB">全選</a>
+        <a href="#" onclick="event.preventDefault();setAllCompareParamsChecked(false)" style="font-size:11px;color:#2563EB">全不選</a>
+      </div>`;
+    listEl.innerHTML = toolbar + rowsHtml;
   }
   const hiddenNote = document.getElementById('cmpHiddenNote');
   if(hiddenNote) {
@@ -5049,6 +5141,10 @@ function renderCompareParamList() {
       ? `已隱藏 ${PROCESS_HIDDEN_PARAMS.size} 個欄位 · <a href="#" onclick="event.preventDefault();unhideAllProcessParams()" style="color:#2563EB">全部還原</a>`
       : '';
   }
+}
+
+function setAllCompareParamsChecked(checked) {
+  document.querySelectorAll('#cmpParamList .cmp-param-cb').forEach(function(cb){ cb.checked = checked; });
 }
 
 function getCompareSelectedParamKeys() {
@@ -5165,11 +5261,23 @@ function renderCompare() {
   chartsEl.innerHTML = html;
 
   selectedKeys.forEach(function(key, ci) {
-    const parts = key.split('::'), station = parts[0], param = parts[1];
+    const isPh = key.indexOf('PH::') === 0;
+    const station = isPh ? PH_COMPARE_STATION_LABEL : key.split('::')[0];
+    const param = isPh ? (PH_MONITOR_ITEMS.find(function(it){return it.key===key.slice(4);}) || {}).name || key.slice(4) : key.split('::')[1];
+    const phItemKey = isPh ? key.slice(4) : null;
     const pts = matched.map(function(mm) {
-      const st = mm.rec.stations.find(function(s){ return s.station===station; });
-      const raw = st && st.params ? st.params[param] : null;
-      const pv = (raw !== null && raw !== undefined && !isNaN(parseFloat(raw))) ? parseFloat(raw) : null;
+      let pv = null;
+      if(isPh) {
+        // pH 監控沒有 Batch ID，只依日期比對：只取「該批次檢驗日當天剛好也有 pH 讀值」的那幾筆，
+        // 沒有當天讀值的批次直接略過（不往前/往後找最近值）。
+        const phSeries = (PH_MONITOR_DATA[phItemKey] && PH_MONITOR_DATA[phItemKey].series) || [];
+        const hit = phSeries.find(function(p){ return p.date === mm.date; });
+        pv = hit ? hit.value : null;
+      } else {
+        const st = mm.rec.stations.find(function(s){ return s.station===station; });
+        const raw = st && st.params ? st.params[param] : null;
+        pv = (raw !== null && raw !== undefined && !isNaN(parseFloat(raw))) ? parseFloat(raw) : null;
+      }
       return { batch:mm.batch, date:mm.date, qcValue:mm.qcValue, paramValue:pv };
     }).filter(function(p){ return p.paramValue !== null; });
 
