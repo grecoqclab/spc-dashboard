@@ -1006,7 +1006,7 @@ function doGet(e) {
       <div style="font-size:12px;color:#475569;line-height:1.9;background:#F8FAFC;padding:14px 18px;border-radius:8px;border:1px solid #E2E8F0">
         1. 在現有的 SPC Google Sheet 中，新增兩個工作表：
            &nbsp;&nbsp;• <code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">_recipients</code> — 收件人清單（欄位：<code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">email, name, active</code>）<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">_ocapConfirm</code> — OCAP參數確認紀錄（欄位：<code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">timestamp, batch, autoOverall, autoStepsText, s1Name, s1Yn, s2Name, s2Yn, s2Ktc, s9Name, s9Yn, s10Name, s10Status, s10Ktc, s10Sample, note, autoDetailJson</code>）<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">_ocapConfirm</code> — OCAP參數確認紀錄（欄位：<code style="background:#E2E8F0;padding:1px 5px;border-radius:3px;font-size:11px">timestamp, batch, autoOverall, autoStepsText, s1Name, s1Yn, s2Name, s2Yn, s2Ktc, s5Name, s5Yn, s9Name, s9Yn, s10Name, s10Status, s10Ktc, s10Sample, note, autoDetailJson</code>）<br>
         2. 開啟 <b>擴充功能 → Apps Script</b>，將下方程式碼完整取代現有程式碼（或合併 doPost）。<br>
         3. 重新部署：選「管理部署」→「編輯」→ 版本選「新版本」→ 更新。<br>
         4. 將新部署 URL 填入上方欄位並儲存。
@@ -1068,12 +1068,13 @@ function handleAction(data) {
     // ── 2. 儲存 OCAP參數確認紀錄 ───────────────────────────────────
     if (data.action === 'saveOcapConfirm') {
       const { batch, autoOverall, autoStepsText, s1Name, s1Yn, s2Name, s2Yn, s2Ktc,
-              s9Name, s9Yn, s10Name, s10Status, s10Ktc, s10Sample, note, autoDetailJson } = data;
+              s5Name, s5Yn, s9Name, s9Yn, s10Name, s10Status, s10Ktc, s10Sample, note, autoDetailJson } = data;
       const ts = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
       const confirmSheet = ss.getSheetByName('_ocapConfirm');
       if (!confirmSheet) return jsonErr('找不到 _ocapConfirm 工作表');
       confirmSheet.appendRow([ts, batch, autoOverall, autoStepsText,
                               s1Name, s1Yn, s2Name, s2Yn, s2Ktc,
+                              s5Name, s5Yn,
                               s9Name, s9Yn, s10Name, s10Status, s10Ktc, s10Sample,
                               note, autoDetailJson]);
       return jsonOk({ saved: true });
@@ -1186,7 +1187,7 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
   <div class="tab-page" id="tabOcapConfirm">
     <div class="ph-connect-panel">
       <div style="font-size:13px;font-weight:600;color:#1E293B;margin-bottom:2px">✅ OCAP參數確認 — 依 SOP 流程逐站核對</div>
-      <div style="font-size:11px;color:#64748B;line-height:1.6">依照「WBR Film OCAP 流程圖（Fine 10 / FQC）」Step 1～10：Step 3／4／6／7／8 從 🔗製程履歷資料自動帶入各站參數與站間靜置時間，依規格自動判定合格／不合格；Step 5（曝光）僅顯示實測值，Pattern／波長需工程師人工核對機台 Log；Step 1／2／9／10 為人工填寫確認。</div>
+      <div style="font-size:11px;color:#64748B;line-height:1.6">依照「WBR Film OCAP 流程圖（Fine 10 / FQC）」Step 1～10：Step 3／4／6／7／8 從 🔗製程履歷資料自動帶入各站參數與站間靜置時間，依規格自動判定合格／不合格；Step 1／2／5／9／10 為人工填寫確認（Step 5 曝光參數：波長／Pattern／能量選取需工程師核對機台 Log 後確認）。</div>
     </div>
 
     <div class="oc-search-panel">
@@ -5475,10 +5476,10 @@ document.addEventListener('DOMContentLoaded', function() {
    依「WBR Film OCAP 流程圖（Fine 10 / FQC）」Step 1～10：
      Step 3／4／6／7／8 → 從 PROCESS_RAW（🔗製程履歷）自動帶入各站參數／
                             站間靜置時間，依下方規格門檻自動判定合格／不合格
-     Step 5（曝光）      → 只顯示曝光能量實測值，不自動判定，留給工程師依
-                            機台 Log 人工核對 Pattern／波長是否正確
-     Step 1／2／9／10    → 人工填寫確認（姓名／Yes-No／狀態），存在瀏覽器
-                            本機（localStorage），僅供這台電腦這個瀏覽器參考
+     Step 1／2／5／9／10 → 人工填寫確認（姓名／Yes-No／狀態），存在瀏覽器
+                            本機（localStorage），僅供這台電腦這個瀏覽器參考。
+                            Step 5（曝光）形式同 Step 2：工程師核對機台 Log
+                            後填「確認異常存在？」，系統不自動判定
    ══════════════════════════════════════════════════════════════════════════ */
 
 // ── 規格門檻（Fine 10 / FQC 版本）──────────────────────────────────────────
@@ -5512,9 +5513,8 @@ const OCAP_AUTO_STEPS = [
     specText:'溫度 30 ± 0.2℃／壓力 2 kg/cm²／速度：正確即可（無固定數值）' },
   { num:4, title:'確認曝光至顯影靜置時間', type:'rest', from:'曝光', to:'顯影',
     specText:`靜置時間 ≥ ${OCAP_REST_TIME_HR} 小時` },
-  { num:5, title:'確認曝光參數條件設定', type:'display', station:'曝光',
-    specText:'Dose 200 / 312 mJ・波長 405nm・Pattern/能量選取需核對機台 Log',
-    displayParams:['曝光能量_Left (mj)','曝光能量_Right (mj)'] },
+  { num:5, title:'確認曝光參數條件設定', type:'manual',
+    noteText:'波長 405nm・Pattern／能量選取需核對機台 Log（未記錄於製程履歷）' },
   { num:6, title:'確認壓膜至曝光靜置時間', type:'rest', from:'壓膜', to:'曝光',
     specText:`靜置時間 ≥ ${OCAP_REST_TIME_HR} 小時` },
   { num:7, title:'確認壓膜機參數條件設定', type:'station', station:'壓膜',
@@ -5531,6 +5531,7 @@ function ocDefaultDraft() {
   return {
     s1:  { name:'', yn:null },
     s2:  { name:'', yn:null, ktc:false },
+    s5:  { name:'', yn:null },
     s9:  { name:'', yn:null },
     s10: { name:'', status:'等待 KTC 調查結果', ktc:false, sample:false },
     note:'',
@@ -5551,6 +5552,7 @@ function ocLoadDraft(batch) {
   return {
     s1: Object.assign(def.s1, all[batch].s1),
     s2: Object.assign(def.s2, all[batch].s2),
+    s5: Object.assign(def.s5, all[batch].s5),
     s9: Object.assign(def.s9, all[batch].s9),
     s10: Object.assign(def.s10, all[batch].s10),
     note: all[batch].note || '',
@@ -5790,6 +5792,32 @@ function ocRenderManualStep2(d) {
   </div>`;
 }
 
+// Step 5：曝光參數改為工程師人工確認（形式同 Step 2）——波長／Pattern 需核對機台 Log
+function ocRenderManualStep5(step, d) {
+  const yn = d.s5.yn;
+  return `<div class="oc-step-card manual">
+    <div class="oc-step-head">
+      <div class="oc-step-title-wrap">
+        <span class="oc-step-num manual">Step ${step.num}</span>
+        <span class="oc-step-title">${step.title}</span>
+        <span class="oc-step-station">曝光站</span>
+      </div>
+      <span class="oc-pending-badge">${yn ? '已確認' : '尚未確認'}</span>
+    </div>
+    <div class="oc-manual-row">
+      <div class="oc-manual-field"><div class="k">確認工程師</div>
+        <input type="text" value="${ocEscHtml(d.s5.name)}" placeholder="輸入姓名" oninput="ocSetField('s5.name', this.value)"></div>
+      <div class="oc-manual-field"><div class="k">確認異常存在？</div>
+        <div class="oc-yn-toggle">
+          <button type="button" class="yes ${yn==='yes'?'on':''}" onclick="ocSetYn('s5','yes')">Yes 確認</button>
+          <button type="button" class="no ${yn==='no'?'on':''}" onclick="ocSetYn('s5','no')">No 否</button>
+        </div>
+      </div>
+    </div>
+    ${step.noteText ? `<div class="oc-note-line">⚠ ${step.noteText}，仍需工程師人工核對機台 Log 後判定。</div>` : ''}
+  </div>`;
+}
+
 function ocRenderManualStep9(d) {
   const yn = d.s9.yn;
   return `<div class="oc-step-card manual">
@@ -5858,7 +5886,7 @@ function ocSetYn(stepKey, val) {
   renderOcapConfirmPage();
 }
 
-// 彙整 Step 3/4/6/7/8（系統自動判定）＋ Step5（僅顯示）的目前結果，
+// 彙整 Step 3/4/6/7/8（系統自動判定）＋ Step5（工程師人工確認）的目前結果，
 // 供儲存確認時一併寫入紀錄（本機 + 雲端）。
 function ocComputeAutoSummary(batch) {
   const detail = OCAP_AUTO_STEPS.map(function(step) {
@@ -5867,6 +5895,10 @@ function ocComputeAutoSummary(batch) {
       const ev = ocEvalRestTime(batch, step.from, step.to);
       verdict = ev.verdict;
       extra = { hours: ev.hasData ? Math.round(ev.hours * 100) / 100 : null };
+    } else if(step.type === 'manual') {
+      const s5 = (OCAP_CONFIRM_DRAFT && OCAP_CONFIRM_DRAFT.s5) || { name:'', yn:null };
+      verdict = 'manual'; // 曝光參數由工程師人工確認，系統不下合格/不合格判定
+      extra = { name: s5.name || '', yn: s5.yn == null ? '' : String(s5.yn) };
     } else if(step.type === 'display') {
       const ev = ocEvalStationSpec(batch, step.station);
       verdict = 'info'; // 曝光留給工程師判別，系統不下合格/不合格判定
@@ -5888,8 +5920,12 @@ function ocComputeAutoSummary(batch) {
   else if(nodataCount === detail.length) overall = '無資料';
   else overall = '合格';
   const stepsText = detail.map(function(d) {
+    const manualLabel = d.extra && d.extra.yn === 'yes' ? '工程師確認：異常存在'
+                      : d.extra && d.extra.yn === 'no'  ? '工程師確認：異常不存在'
+                      : '工程師確認：未填';
     const label = d.verdict === 'pass' ? '合格' : d.verdict === 'fail' ? '不合格' :
-                  d.verdict === 'partial' ? '部分缺失' : d.verdict === 'info' ? '僅顯示' : '無資料';
+                  d.verdict === 'partial' ? '部分缺失' : d.verdict === 'info' ? '僅顯示' :
+                  d.verdict === 'manual' ? manualLabel : '無資料';
     return 'Step' + d.num + ' ' + d.title + '：' + label;
   }).join('；');
   return { overall: overall, stepsText: stepsText, detail: detail };
@@ -5925,6 +5961,7 @@ async function ocSaveConfirm() {
       autoStepsText:  summary.stepsText,
       s1Name:  d.s1.name  || '', s1Yn:  d.s1.yn  == null ? '' : String(d.s1.yn),
       s2Name:  d.s2.name  || '', s2Yn:  d.s2.yn  == null ? '' : String(d.s2.yn), s2Ktc: String(!!d.s2.ktc),
+      s5Name:  d.s5.name  || '', s5Yn:  d.s5.yn  == null ? '' : String(d.s5.yn),
       s9Name:  d.s9.name  || '', s9Yn:  d.s9.yn  == null ? '' : String(d.s9.yn),
       s10Name: d.s10.name || '', s10Status: d.s10.status || '', s10Ktc: String(!!d.s10.ktc), s10Sample: String(!!d.s10.sample),
       note:           d.note || '',
@@ -5966,12 +6003,12 @@ function renderOcapConfirmPage() {
   const autoEvals = OCAP_AUTO_STEPS.map(function(step) {
     if(step.type === 'station') return { step:step, verdict: ocEvalStationSpec(batch, step.station).verdict };
     if(step.type === 'rest')    return { step:step, verdict: ocEvalRestTime(batch, step.from, step.to).verdict };
-    return { step:step, verdict:'display' };
+    return { step:step, verdict: step.type }; // 'display' 或 'manual'（Step 5）— 不列入自動判定統計
   });
-  const judged = autoEvals.filter(function(e){ return e.step.type !== 'display'; });
+  const judged = autoEvals.filter(function(e){ return e.step.type === 'station' || e.step.type === 'rest'; });
   const passCount = judged.filter(function(e){ return e.verdict==='pass'; }).length;
   const failCount = judged.filter(function(e){ return e.verdict==='fail'; }).length;
-  const refCount = autoEvals.length - judged.length;
+  const refCount = autoEvals.filter(function(e){ return e.step.type === 'display'; }).length;
 
   // ── Step1/Step2 選 No → 鎖住後面所有步驟；Step9 選 No → 鎖住 Step10 ──
   const closedStep = d.s1.yn === 'no' ? 1 : (d.s2.yn === 'no' ? 2 : null);
@@ -5982,6 +6019,7 @@ function renderOcapConfirmPage() {
   const stepsHtml = OCAP_AUTO_STEPS.map(function(step) {
     if(step.type === 'station') return ocRenderStationCard(step, batch);
     if(step.type === 'rest')    return ocRenderRestCard(step, batch);
+    if(step.type === 'manual')  return ocRenderManualStep5(step, d);
     return ocRenderDisplayCard(step, batch);
   }).join('');
 
