@@ -424,7 +424,7 @@ body{font-family:var(--font-sans)}
 /* 前期指標比對：比對圖依站別分組，一站一整行，站內圖表橫向排列（跟「全部」總覽的分組風格一致） */
 .cmp-station-section{margin-bottom:1.25rem}
 .cmp-station-header{font-size:13px;font-weight:700;color:#1D4ED8;margin-bottom:8px}
-.cmp-station-charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;align-items:start}
+.cmp-station-charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:18px;align-items:start}
 .cmp-station-charts-grid .chart-card{margin-bottom:0}
 .cmp-mark-chip button{border:none;background:transparent;color:#9D174D;cursor:pointer;font-size:12px;line-height:1;padding:0;font-weight:700}
 .cmp-mark-chip button:hover{color:#DB2777}
@@ -4455,7 +4455,15 @@ const STATION_PARAM_WHITELIST = {
   '去膜': ['去膜溫度(℃)'],
 };
 // 正規化欄名以便比對（去除多餘空白差異，例如「酸洗時間 (sec)」vs「酸洗時間(sec)」）
-function normColName(s) { return String(s||'').replace(/\s+/g,' ').trim(); }
+// 正規化只用來「判斷是否在白名單內」，實際顯示/儲存仍用來源表原始欄名（見 buildProcessHistory），
+// 所以這裡可以放寬容忍全形/半形符號、大小寫等常見排版差異，不會影響其他地方。
+function normColName(s) {
+  return String(s||'')
+    .replace(/（/g, '(').replace(/）/g, ')')
+    .replace(/／/g, '/')
+    .replace(/\s+/g, '') // 完全去除空白（而非只是壓縮成一個空格），這樣「時間 (sec)」才會跟「時間(sec)」視為相同
+    .toLowerCase();
+}
 // 每個站別建一份正規化後的允許欄名 Set，方便查詢
 const STATION_PARAM_WHITELIST_NORM = (function() {
   const out = {};
@@ -5318,7 +5326,7 @@ function renderCompare() {
       const param = parseCompareKey(selectedKeys[ci]).param;
       return `<div class="chart-card">
           <div class="chart-title">「${param}」 vs 量測值 比對</div>
-          <div class="chart-wrap" style="height:200px"><canvas id="cmpChart${ci}"></canvas></div>
+          <div class="chart-wrap" style="height:300px"><canvas id="cmpChart${ci}"></canvas></div>
           <div id="cmpNote${ci}" style="font-size:11px;color:#64748B;margin-top:8px"></div>
         </div>`;
     }).join('');
