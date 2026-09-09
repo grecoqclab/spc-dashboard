@@ -1175,6 +1175,7 @@ function buildEmailBody({ batch, rule, product, detectedAt, violations }) {
 
     <div class="ph-search-bar">
       <input type="text" id="phSearchBatch" placeholder="搜尋 Batch ID…（可用逗號或空白分隔多筆，例如 K077RT, K078RT）" oninput="renderProcessTable()" style="min-width:340px">
+      <select id="phSearchType" onchange="renderProcessTable()" title="依料號 Type 篩選"><option value="">全部 Type</option></select>
       <span id="phCountLabel" style="font-size:12px;color:#64748B"></span>
     </div>
 
@@ -4680,6 +4681,7 @@ async function connectProcessSheet() {
     const badge = document.getElementById('phConnBadge');
     if(badge) badge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22C55E;margin-right:4px"></span>已連接（${batchCount} 批次）`;
     populatePhStationFilter();
+    populatePhTypeFilter();
     renderProcessTable();
     if(typeof populateCompareSelectors === 'function') populateCompareSelectors();
   } catch(err) {
@@ -4705,6 +4707,21 @@ function populatePhStationFilter() {
   sel.innerHTML = '<option value="">全部站別</option>' +
     PROCESS_ALL_STATIONS.map(function(s){ return `<option value="${s}">${s}</option>`; }).join('');
   if(PROCESS_ALL_STATIONS.indexOf(cur) !== -1) sel.value = cur;
+}
+
+// 依目前已載入的履歷資料，收集所有出現過的料號 Type，填入製程履歷分頁的 Type 篩選下拉
+function populatePhTypeFilter() {
+  const sel = document.getElementById('phSearchType');
+  if(!sel) return;
+  const cur = sel.value;
+  const types = Array.from(new Set(
+    Object.values(PROCESS_RAW)
+      .map(function(rec){ return String(rec.type || '').trim(); })
+      .filter(Boolean)
+  )).sort(function(a,b){ return a.localeCompare(b); });
+  sel.innerHTML = '<option value="">全部 Type</option>' +
+    types.map(function(t){ return `<option value="${ocEscHtml(t)}">${ocEscHtml(t)}</option>`; }).join('');
+  sel.value = types.indexOf(cur) !== -1 ? cur : '';
 }
 
 // ── 呈現層 ③：製程履歷分頁 — 批次列表 + 搜尋 ────────────────────────────
@@ -4757,6 +4774,8 @@ function renderProcessTable() {
   const qEl = document.getElementById('phSearchBatch');
   // 支援一次輸入多筆 Batch ID：以逗號（全形/半形）或空白/換行分隔，符合「任一筆」關鍵字即顯示
   const qTokens = ((qEl && qEl.value) || '').split(/[,，\s]+/).map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  const typeEl = document.getElementById('phSearchType');
+  const typeFilter = (typeEl && typeEl.value || '').trim();
   const countLbl = document.getElementById('phCountLabel');
 
   const batches = Object.values(PROCESS_RAW).filter(function(rec) {
@@ -4765,6 +4784,7 @@ function renderProcessTable() {
       const matched = qTokens.some(function(tok){ return batchLower.indexOf(tok) !== -1; });
       if(!matched) return false;
     }
+    if(typeFilter && String(rec.type || '').trim() !== typeFilter) return false;
     return true;
   }).sort(function(a,b) {
     return (lastStationTime(b)||'').localeCompare(lastStationTime(a)||'');
@@ -5565,18 +5585,35 @@ function ocGetStation(batch, stationName) {
   return rec.stations.find(function(s){ return s.station === stationName; }) || null;
 }
 
+// OCAP_STATION_SPECS / OCAP_DISPLAY_ONLY_PARAMS 的參數名稱是寫死字串（例：「顯影速度(M/min)」、
+// 「壓膜速度(mpm)」）；若來源試算表欄名排版稍有差異——多一個空白、全形括號、大小寫、
+// 甚至單位不同（M/min vs mpm）——直接用 params[name] 會抓不到，OCAP 就顯示「無資料」。
+// 這裡改用與履歷白名單相同的 normColName 正規化比對，比對不到再放寬到「括號前主體名稱」。
+function ocGetParamVal(params, wantName) {
+  if(!params) return undefined;
+  if(params[wantName] !== undefined && params[wantName] !== null && String(params[wantName]).trim() !== '') return params[wantName];
+  const keys = Object.keys(params);
+  const want = normColName(wantName);
+  let hit = keys.find(function(k){ return normColName(k) === want; });
+  if(!hit) {
+    const wantBase = want.replace(/\(.*$/, '');
+    if(wantBase.length >= 3) hit = keys.find(function(k){ return normColName(k).replace(/\(.*$/, '') === wantBase; });
+  }
+  return hit ? params[hit] : undefined;
+}
+
 function ocEvalStationSpec(batch, stationName) {
   const st = ocGetStation(batch, stationName);
   const specs = OCAP_STATION_SPECS[stationName] || [];
   const displayParams = OCAP_DISPLAY_ONLY_PARAMS[stationName] || [];
   const items = specs.map(function(sp) {
-    const raw = st && st.params ? st.params[sp.param] : undefined;
+    const raw = st && st.params ? ocGetParamVal(st.params, sp.param) : undefined;
     const v = (raw !== undefined && raw !== null && String(raw).trim() !== '' && !isNaN(parseFloat(raw))) ? parseFloat(raw) : null;
     const pass = v === null ? null : Math.abs(v - sp.target) <= sp.tol;
     return { param:sp.param, value:v, pass:pass, target:sp.target, tol:sp.tol };
   });
   const displayItems = displayParams.map(function(p) {
-    const raw = st && st.params ? st.params[p] : undefined;
+    const raw = st && st.params ? ocGetParamVal(st.params, p) : undefined;
     return { param:p, value:(raw !== undefined && raw !== null && String(raw).trim() !== '') ? raw : null };
   });
   let verdict;
